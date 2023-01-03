@@ -17,7 +17,7 @@ func main() {
 
 	var password string
 	fmt.Println("Enter your Divolt account's password:")
-	fmt.Scanln(&email)
+	fmt.Scanln(&password)
 
 	sesh := session.NewSession(email, password, "Limestone")
 	err := sesh.Login()
