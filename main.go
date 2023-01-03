@@ -2,32 +2,69 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-
-	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"limestone/routes/auth/session"
+	"limestone/routes/channels"
+	"limestone/routes/servers"
+	"limestone/util"
+	"log"
+	"time"
 )
 
 func main() {
-	a := textinput.NewModel()
-	a.Focus()
+	var email string
+	fmt.Println("Enter your Divolt account's email address:")
+	fmt.Scanln(&email)
 
-	s := spinner.NewModel()
-	s.Spinner = spinner.Dot
+	var password string
+	fmt.Println("Enter your Divolt account's password:")
+	fmt.Scanln(&email)
 
-	initialModel := model{
-		albumInput:   a,
-		spinner:      s,
-		pathInput:    textinput.NewModel(),
-		currentState: 0,
-		helper:       &helper{HTTPClient: http.DefaultClient},
-	}
-
-	err := tea.NewProgram(initialModel, tea.WithAltScreen()).Start()
+	sesh := session.NewSession(email, password, "Limestone")
+	err := sesh.Login()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatal("Failed to login.")
 	}
+
+	err = servers.CheckServerStatus(&sesh)
+	if err != nil {
+		sesh.Logout()
+		log.Fatal(err)
+	}
+
+	var albumUrl string
+	fmt.Println("Input the album/track to download:")
+	fmt.Scanln(&albumUrl)
+
+	valid, err := util.IsUrlValid(albumUrl)
+	if !valid || err != nil {
+		sesh.Logout()
+		log.Fatal("Invalid URL provided.")
+	}
+
+	err = channels.SendDownloadMessage(&sesh, albumUrl)
+	if err != nil {
+		sesh.Logout()
+		log.Fatal(err)
+	}
+
+	fmt.Println("Waiting a bit...")
+	time.Sleep(3 * time.Second)
+
+	message, err := channels.GetUploadMessage(&sesh)
+	if err != nil {
+		sesh.Logout()
+		log.Fatal(err)
+	}
+
+	err = sesh.Logout()
+	if err != nil {
+		log.Println("Failed to log out this session, go to your Divolt settings and remove it.")
+	}
+
+	path, err := util.DownloadFileFromDescription(message.Embeds[0].Description)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Downloaded to %s.", path)
 }
