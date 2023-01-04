@@ -24,13 +24,6 @@ type loginDetails struct {
 	SessionName string `json:"friendly_name"`
 }
 
-type loginResult struct {
-	UniqueId     string `json:"_id"`
-	UserId       string `json:"user_id"`
-	SessionToken string `json:"token"`
-	DisplayName  string `json:"name"`
-}
-
 type DefaultError struct {
 	Error string `json:"type"`
 }
@@ -66,11 +59,17 @@ func (sesh *Session) Login() error {
 
 	defer resp.Body.Close()
 
-	var result loginResult
+	result := struct {
+		UniqueId     string `json:"_id"`
+		UserId       string `json:"user_id"`
+		SessionToken string `json:"token"`
+		DisplayName  string `json:"name"`
+	}{}
 	err = util.UnmarshalResponseBody(resp, &result)
 	if err != nil {
 		return err
 	}
+
 	sesh.Id = result.UniqueId
 	sesh.UserId = result.UserId
 	sesh.Token = result.SessionToken

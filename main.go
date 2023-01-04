@@ -7,7 +7,6 @@ import (
 	"limestone/routes/servers"
 	"limestone/util"
 	"log"
-	"time"
 )
 
 func main() {
@@ -55,9 +54,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Waiting a bit...")
-	time.Sleep(3 * time.Second)
-
 	message, err := channels.GetUploadMessage(&sesh)
 	if err != nil {
 		sesh.Logout()
@@ -66,7 +62,7 @@ func main() {
 
 	err = sesh.Logout()
 	if err != nil {
-		log.Println("Failed to log out this session, go to your Divolt settings and remove it.")
+		fmt.Println("Failed to log out this session, go to your Divolt settings and remove it.")
 	}
 
 	path, err := util.DownloadFileFromDescription(message.Embeds[0].Description)

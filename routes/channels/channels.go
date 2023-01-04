@@ -1,7 +1,6 @@
 package channels
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,17 +15,13 @@ import (
 	"github.com/sacOO7/gowebsocket"
 )
 
-type downloadMessage struct {
-	Content string `json:"content"`
-}
-
 type Message struct {
 	Id      string  `json:"_id"`
 	Content string  `json:"content"`
-	Embeds  []Embed `json:"embeds"`
+	Embeds  []embed `json:"embeds"`
 }
 
-type Embed struct {
+type embed struct {
 	Description string `json:"description"`
 }
 
@@ -34,19 +29,12 @@ const music_dl_request_channel_id = "01G9AZ9AMWDV227YA7FQ5RV8WB"
 const music_dl_uploads_channel_id = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
 
 func SendDownloadMessage(sesh *session.Session, url string) error {
-	jsoned, err := json.Marshal(
-		downloadMessage{
-			Content: "!dl " + url,
-		},
-	)
-	if err != nil {
-		return err
-	}
+	content := fmt.Sprintf(`{"content":"%s"}`, "!dl "+url)
 
 	req, err := util.RequestWithSessionToken(
 		http.MethodPost,
 		fmt.Sprintf("channels/%s/messages", music_dl_request_channel_id),
-		bytes.NewReader(jsoned),
+		strings.NewReader(content),
 		sesh.Token,
 	)
 	if err != nil {
@@ -77,18 +65,17 @@ func SendDownloadMessage(sesh *session.Session, url string) error {
 
 func GetUploadMessage(sesh *session.Session) (Message, error) {
 	var message Message
-
-	fmt.Print("Waiting for authentication... ")
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
 
 	socket := gowebsocket.New("wss://ws.divolt.xyz")
 	defer socket.Close()
 
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
-
 	socket.OnConnected = func(_ gowebsocket.Socket) {
 		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Token)
 		socket.SendText(json)
+
+		fmt.Print("Waiting for authentication... ")
 	}
 
 	socket.OnTextMessage = func(textMessage string, _ gowebsocket.Socket) {
@@ -100,6 +87,7 @@ func GetUploadMessage(sesh *session.Session) (Message, error) {
 		if err != nil {
 			socket.Close()
 			sesh.Logout()
+
 			log.Fatal(err)
 		}
 
@@ -112,12 +100,11 @@ func GetUploadMessage(sesh *session.Session) (Message, error) {
 			if err != nil {
 				socket.Close()
 				sesh.Logout()
+
 				log.Fatal(err)
 			}
 
 			if strings.Contains(message.Content, sesh.UserId) {
-				fmt.Println("Response recieved.")
-
 				socket.Close()
 				wg.Done()
 			}
@@ -126,6 +113,8 @@ func GetUploadMessage(sesh *session.Session) (Message, error) {
 
 	socket.Connect()
 	wg.Wait()
+
+	fmt.Println("Response recieved.")
 
 	return message, nil
 }

@@ -16,8 +16,8 @@ import (
 )
 
 type Config struct {
-	Email    string `toml:"email"`
-	Password string `toml:"bcrypt_pass"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func IsUrlValid(url string) (bool, error) {
@@ -91,8 +91,7 @@ func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
 func DownloadFileFromDescription(description string) (string, error) {
 	splitDesc := strings.Split(description, "\n")
 	idx := len(splitDesc)
-	url := splitDesc[idx-1]
-	url = strings.TrimSpace(url)
+	url := strings.TrimSpace(splitDesc[idx-1])
 
 	path, err := os.UserHomeDir()
 	if err != nil {
@@ -147,8 +146,9 @@ func CacheLoginDetails(config Config) error {
 		return err
 	}
 	path += "/.config/limestone"
+	file_path := path + "/config.json"
 
-	_, err = os.Stat(path + "/config.json")
+	_, err = os.Stat(file_path)
 	if !os.IsNotExist(err) {
 		return err
 	}
@@ -158,7 +158,7 @@ func CacheLoginDetails(config Config) error {
 		return err
 	}
 
-	dest, err := os.Create(path + "/config.json")
+	dest, err := os.Create(file_path)
 	if err != nil {
 		return err
 	}

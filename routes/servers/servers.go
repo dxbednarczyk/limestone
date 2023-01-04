@@ -8,17 +8,12 @@ import (
 	"net/http"
 )
 
-type user struct {
-	JoinedAt string `json:"joined_at"`
-	Timeout  string `json:"timeout"`
-}
-
-const SLAV_ART_SERVER_ID = "01G96DF05GVMT53VKYH83RMZMN"
+const slav_art_server_id = "01G96DF05GVMT53VKYH83RMZMN"
 
 func CheckServerStatus(sesh *session.Session) error {
 	req, err := util.RequestWithSessionToken(
 		http.MethodGet,
-		fmt.Sprintf("servers/%s/members/%s", SLAV_ART_SERVER_ID, sesh.UserId),
+		fmt.Sprintf("servers/%s/members/%s", slav_art_server_id, sesh.UserId),
 		nil,
 		sesh.Token,
 	)
@@ -43,7 +38,10 @@ func CheckServerStatus(sesh *session.Session) error {
 		return errors.New(derr.Error)
 	}
 
-	var user user
+	user := struct {
+		JoinedAt string `json:"joined_at"`
+		Timeout  string `json:"timeout"`
+	}{}
 	err = util.UnmarshalResponseBody(resp, &user)
 	if err != nil {
 		return err
@@ -52,7 +50,6 @@ func CheckServerStatus(sesh *session.Session) error {
 	if user.JoinedAt == "" {
 		return errors.New("user not in slav art server")
 	}
-
 	if user.Timeout != "" {
 		return errors.New("user is in timeout")
 	}
