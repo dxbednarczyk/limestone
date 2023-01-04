@@ -16,8 +16,8 @@ import (
 )
 
 type Config struct {
-	Email    string `toml:"email"`
-	Password string `toml:"bcrypt_pass"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func IsUrlValid(url string) (bool, error) {
