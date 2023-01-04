@@ -100,7 +100,7 @@ func DownloadFileFromDescription(description string) (string, error) {
 	}
 	path += "/Downloads"
 	err = os.Mkdir(path, os.ModePerm)
-	if err != nil {
+	if !os.IsExist(err) {
 		return "", err
 	}
 
