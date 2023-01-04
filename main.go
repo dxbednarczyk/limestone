@@ -11,18 +11,26 @@ import (
 )
 
 func main() {
-	var email string
-	fmt.Println("Enter your Divolt account's email address:")
-	fmt.Scanln(&email)
+	var config util.Config
+	config, err := util.ReadFromCache()
+	if err != nil {
+		fmt.Println("** Failed to read from cache, maybe you've never logged in yet. **")
+		fmt.Println("** Otherwise, remove config.toml from the config directory. **")
 
-	var password string
-	fmt.Println("Enter your Divolt account's password:")
-	fmt.Scanln(&password)
+		config = util.GetLoginDetails()
+	} else {
+		fmt.Println("Logging in as " + config.Email)
+	}
 
-	sesh := session.NewSession(email, password, "Limestone")
-	err := sesh.Login()
+	sesh := session.NewSession(config.Email, config.Password, "Limestone")
+	err = sesh.Login()
 	if err != nil {
 		log.Fatal("Failed to login.")
+	}
+
+	err = util.CacheLoginDetails(config)
+	if err != nil {
+		fmt.Println("Failed to cache login details, you will need to input them again next time.")
 	}
 
 	err = servers.CheckServerStatus(&sesh)

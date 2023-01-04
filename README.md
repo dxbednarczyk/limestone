@@ -15,6 +15,6 @@ $ go get && go build
 ## Roadmap
 
 - [x] Initial implementation
-- [ ] Caching of emails and passwords (hashed, of course)
+- [x] Caching of login details (plaintext will do for now, improve in future)
 - [ ] Pretty it up using [Bubbletea](https://github.com/charmbracelet/bubbletea)
 - [ ] Ease of use for users not used to Slav Art (creating accounts, provider list)

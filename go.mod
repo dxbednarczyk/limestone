@@ -14,5 +14,5 @@ require (
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sacOO7/go-logger v0.0.0-20180719173527-9ac9add5a50d // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/sys v0.3.0 // indirect
 )

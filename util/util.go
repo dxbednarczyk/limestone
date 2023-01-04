@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,6 +14,11 @@ import (
 	"github.com/cheggaaa/pb"
 	"github.com/google/uuid"
 )
+
+type Config struct {
+	Email    string `toml:"email"`
+	Password string `toml:"bcrypt_pass"`
+}
 
 func IsUrlValid(url string) (bool, error) {
 	urls := []string{
@@ -92,10 +96,13 @@ func DownloadFileFromDescription(description string) (string, error) {
 
 	path, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	path += "/Downloads"
-	_ = os.Mkdir(path, os.ModePerm)
+	err = os.Mkdir(path, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -132,4 +139,80 @@ func DownloadFileFromDescription(description string) (string, error) {
 	bar.Finish()
 
 	return filename, nil
+}
+
+func CacheLoginDetails(config Config) error {
+	path, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	path += "/.config/limestone"
+
+	_, err = os.Stat(path + "/config.json")
+	if !os.IsNotExist(err) {
+		return err
+	}
+
+	err = os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	dest, err := os.Create(path + "/config.json")
+	if err != nil {
+		return err
+	}
+
+	defer dest.Close()
+
+	encoded, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	b, err := dest.Write(encoded)
+	if err != nil {
+		return err
+	}
+	dest.Sync()
+
+	fmt.Printf("Wrote %d bytes to config.json\n", b)
+
+	return nil
+}
+
+func ReadFromCache() (Config, error) {
+	path, err := os.UserHomeDir()
+	if err != nil {
+		return Config{}, err
+	}
+	path += "/.config/limestone/config.json"
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return Config{}, err
+	}
+
+	var config Config
+	err = json.Unmarshal(content, &config)
+	if err != nil {
+		return Config{}, err
+	}
+
+	return config, nil
+}
+
+func GetLoginDetails() Config {
+	var email string
+	fmt.Println("Enter your Divolt account's email address:")
+	fmt.Scanln(&email)
+
+	var password string
+	fmt.Println("Enter your Divolt account's password:")
+	fmt.Scanln(&password)
+
+	return Config{
+		Email:    email,
+		Password: password,
+	}
 }
