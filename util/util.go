@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +17,30 @@ import (
 )
 
 func IsUrlValid(url string) (bool, error) {
+	urls := []string{
+		"www.qobuz.com/",
+		"play.qobuz.com/",
+		"www.deezer.com/",
+		"listen.tidal.com/",
+		"tidal.com/browse/",
+		"music.youtube.com/",
+		"soundcloud.com/",
+		"music.apple.com/",
+		"open.spotify.com/",
+	}
+
+	var contains bool
+	for _, p := range urls {
+		if strings.Contains(url, p) {
+			contains = true
+			break
+		}
+	}
+
+	if !contains {
+		return false, nil
+	}
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return false, err
@@ -62,7 +87,6 @@ func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
 func DownloadFileFromDescription(description string) (string, error) {
 	splitDesc := strings.Split(description, "\n")
 	idx := len(splitDesc)
-
 	url := splitDesc[idx-1]
 	url = strings.TrimSpace(url)
 
@@ -84,10 +108,10 @@ func DownloadFileFromDescription(description string) (string, error) {
 		return "", errors.New("status not ok")
 	}
 
-	sourceSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+	contentLength, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 	newUuid := uuid.NewString()
 
-	filename := path + "/" + newUuid + ".zip"
+	filename := fmt.Sprintf("%s/%s.zip", path, newUuid)
 	dest, err := os.Create(filename)
 	if err != nil {
 		return "", err
@@ -96,7 +120,7 @@ func DownloadFileFromDescription(description string) (string, error) {
 	defer dest.Close()
 
 	// create bar
-	bar := pb.New(int(sourceSize)).SetUnits(pb.U_BYTES).SetRefreshRate(time.Millisecond * 10)
+	bar := pb.New(contentLength).SetUnits(pb.U_BYTES).SetRefreshRate(time.Millisecond * 10)
 	bar.ShowSpeed = true
 	bar.Start()
 
