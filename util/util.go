@@ -88,39 +88,46 @@ func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
 	return nil
 }
 
-func DownloadFileFromDescription(description string) (string, error) {
+func DownloadFileFromDescription(description string, path string) error {
 	splitDesc := strings.Split(description, "\n")
 	idx := len(splitDesc)
 	url := strings.TrimSpace(splitDesc[idx-1])
 
-	path, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
+	var err error
+	if path == "" {
+		path, err = os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		path += "/Downloads"
 	}
-	path += "/Downloads"
+
 	err = os.Mkdir(path, os.ModePerm)
 	if !os.IsExist(err) {
-		return "", err
+		return err
 	}
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("status not ok")
+	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusPartialContent {
+		return errors.New("status not ok")
 	}
 
-	contentLength, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+	if err != nil {
+		return err
+	}
 	newUuid := uuid.NewString()
 
 	filename := fmt.Sprintf("%s/%s.zip", path, newUuid)
 	dest, err := os.Create(filename)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	defer dest.Close()
@@ -137,7 +144,8 @@ func DownloadFileFromDescription(description string) (string, error) {
 	io.Copy(dest, reader)
 	bar.Finish()
 
-	return filename, nil
+	fmt.Printf("Downloaded to %s.\n", filename)
+	return nil
 }
 
 func CacheLoginDetails(config Config) error {

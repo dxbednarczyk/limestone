@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"limestone/routes/auth/session"
 	"limestone/routes/channels"
@@ -10,6 +11,9 @@ import (
 )
 
 func main() {
+	directory := flag.String("dir", "", "specify an absolute directory to download files to, defaults to ~/Downloads")
+	flag.Parse()
+
 	var config util.Config
 	config, err := util.ReadFromCache()
 	if err != nil {
@@ -18,7 +22,7 @@ func main() {
 
 		config = util.GetLoginDetails()
 	} else {
-		fmt.Println("Logging in as " + config.Email)
+		fmt.Printf("Logging in as %s\n", config.Email)
 	}
 
 	sesh := session.NewSession(config.Email, config.Password, "Limestone")
@@ -65,10 +69,8 @@ func main() {
 		fmt.Println("Failed to log out this session, go to your Divolt settings and remove it.")
 	}
 
-	path, err := util.DownloadFileFromDescription(message.Embeds[0].Description)
+	err = util.DownloadFileFromDescription(message.Embeds[0].Description, *directory)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("Downloaded to %s.", path)
 }

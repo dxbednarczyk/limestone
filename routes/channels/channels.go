@@ -29,7 +29,7 @@ const music_dl_request_channel_id = "01G9AZ9AMWDV227YA7FQ5RV8WB"
 const music_dl_uploads_channel_id = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
 
 func SendDownloadMessage(sesh *session.Session, url string) error {
-	content := fmt.Sprintf(`{"content":"%s"}`, "!dl "+url)
+	content := fmt.Sprintf(`{"content":"!dl %s"}`, url)
 
 	req, err := util.RequestWithSessionToken(
 		http.MethodPost,
