@@ -15,13 +15,13 @@ func main() {
 	flag.Parse()
 
 	var config util.Config
-	var alreadyCached bool
+	alreadyCached := false
 	config, err := util.ReadFromCache()
 	if err != nil {
 		fmt.Println("** Failed to read from cache, maybe you've never logged in yet. **")
 		fmt.Println("** Otherwise, remove config.toml from the config directory. **")
 
-		config = util.GetLoginDetails()
+		util.GetLoginDetails(&config)
 	} else {
 		fmt.Printf("Logging in as %s\n", config.Email)
 		alreadyCached = true

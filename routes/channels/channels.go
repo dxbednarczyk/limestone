@@ -16,13 +16,11 @@ import (
 )
 
 type Message struct {
-	Id      string  `json:"_id"`
-	Content string  `json:"content"`
-	Embeds  []embed `json:"embeds"`
-}
-
-type embed struct {
-	Description string `json:"description"`
+	Id      string `json:"_id"`
+	Content string `json:"content"`
+	Embeds  []struct {
+		Description string `json:"description"`
+	} `json:"embeds"`
 }
 
 const music_dl_request_channel_id = "01G9AZ9AMWDV227YA7FQ5RV8WB"

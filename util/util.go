@@ -20,7 +20,7 @@ type Config struct {
 	Password string `json:"password"`
 }
 
-var homeDir string
+var homeDir, _ = os.UserHomeDir()
 
 func IsUrlValid(url string) (bool, error) {
 	urls := []string{
@@ -96,11 +96,7 @@ func DownloadFileFromDescription(description string, path string) error {
 
 	var err error
 	if path == "" {
-		path, err = GetHomeDir()
-		if err != nil {
-			return err
-		}
-		path += "/Downloads"
+		path = fmt.Sprintf("%s/Downloads", path)
 	}
 
 	err = os.Mkdir(path, os.ModePerm)
@@ -151,14 +147,10 @@ func DownloadFileFromDescription(description string, path string) error {
 }
 
 func CacheLoginDetails(config Config) error {
-	path, err := GetHomeDir()
-	if err != nil {
-		return err
-	}
-	path += "/.config/limestone"
-	file_path := path + "/config.json"
+	path := fmt.Sprintf("%s/.config/limestone", homeDir)
+	file_path := fmt.Sprintf("%s/config.json", path)
 
-	_, err = os.Stat(file_path)
+	_, err := os.Stat(file_path)
 	if !os.IsNotExist(err) {
 		return err
 	}
@@ -192,12 +184,7 @@ func CacheLoginDetails(config Config) error {
 }
 
 func ReadFromCache() (Config, error) {
-	path, err := GetHomeDir()
-	if err != nil {
-		return Config{}, err
-	}
-	path += "/.config/limestone/config.json"
-
+	path := fmt.Sprintf("%s/.config/limestone/config.json", homeDir)
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return Config{}, err
@@ -212,7 +199,7 @@ func ReadFromCache() (Config, error) {
 	return config, nil
 }
 
-func GetLoginDetails() Config {
+func GetLoginDetails(config *Config) {
 	var email string
 	fmt.Println("Enter your Divolt account's email address:")
 	fmt.Scanln(&email)
@@ -221,21 +208,6 @@ func GetLoginDetails() Config {
 	fmt.Println("Enter your Divolt account's password:")
 	fmt.Scanln(&password)
 
-	return Config{
-		Email:    email,
-		Password: password,
-	}
-}
-
-func GetHomeDir() (string, error) {
-	if homeDir != "" {
-		return homeDir, nil
-	}
-
-	path, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	return path, nil
+	config.Email = email
+	config.Password = password
 }
