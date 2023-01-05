@@ -96,7 +96,7 @@ func DownloadFileFromDescription(description string, path string) error {
 
 	var err error
 	if path == "" {
-		path = fmt.Sprintf("%s/Downloads", path)
+		path = fmt.Sprintf("%s/Downloads", homeDir)
 	}
 
 	err = os.Mkdir(path, os.ModePerm)
