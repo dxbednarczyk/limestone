@@ -20,17 +20,18 @@ type Config struct {
 	Password string `json:"password"`
 }
 
+var homeDir string
+
 func IsUrlValid(url string) (bool, error) {
 	urls := []string{
-		"www.qobuz.com/",
-		"play.qobuz.com/",
-		"www.deezer.com/",
-		"listen.tidal.com/",
-		"tidal.com/browse/",
-		"music.youtube.com/",
-		"soundcloud.com/",
-		"music.apple.com/",
-		"open.spotify.com/",
+		"qobuz.com",
+		"deezer.com",
+		"listen.tidal.com",
+		"tidal.com/browse",
+		"music.youtube.com",
+		"soundcloud.com",
+		"music.apple.com",
+		"open.spotify.com",
 	}
 
 	var contains bool
@@ -62,7 +63,7 @@ func IsUrlValid(url string) (bool, error) {
 func RequestWithSessionToken(method string, path string, body io.Reader, token string) (*http.Request, error) {
 	req, err := http.NewRequest(
 		method,
-		"https://api.divolt.xyz/"+path,
+		fmt.Sprintf("https://api.divolt.xyz/%s", path),
 		body,
 	)
 	if err != nil {
@@ -95,7 +96,7 @@ func DownloadFileFromDescription(description string, path string) error {
 
 	var err error
 	if path == "" {
-		path, err = os.UserHomeDir()
+		path, err = GetHomeDir()
 		if err != nil {
 			return err
 		}
@@ -118,13 +119,9 @@ func DownloadFileFromDescription(description string, path string) error {
 		return errors.New("status not ok")
 	}
 
-	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
-	if err != nil {
-		return err
-	}
 	newUuid := uuid.NewString()
-
 	filename := fmt.Sprintf("%s/%s.zip", path, newUuid)
+
 	dest, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -133,6 +130,11 @@ func DownloadFileFromDescription(description string, path string) error {
 	defer dest.Close()
 
 	// create bar
+	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+	if err != nil {
+		return err
+	}
+
 	bar := pb.New(contentLength).SetUnits(pb.U_BYTES).SetRefreshRate(time.Millisecond * 10)
 	bar.ShowSpeed = true
 	bar.Start()
@@ -149,7 +151,7 @@ func DownloadFileFromDescription(description string, path string) error {
 }
 
 func CacheLoginDetails(config Config) error {
-	path, err := os.UserHomeDir()
+	path, err := GetHomeDir()
 	if err != nil {
 		return err
 	}
@@ -190,7 +192,7 @@ func CacheLoginDetails(config Config) error {
 }
 
 func ReadFromCache() (Config, error) {
-	path, err := os.UserHomeDir()
+	path, err := GetHomeDir()
 	if err != nil {
 		return Config{}, err
 	}
@@ -223,4 +225,17 @@ func GetLoginDetails() Config {
 		Email:    email,
 		Password: password,
 	}
+}
+
+func GetHomeDir() (string, error) {
+	if homeDir != "" {
+		return homeDir, nil
+	}
+
+	path, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
 }

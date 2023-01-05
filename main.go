@@ -15,6 +15,7 @@ func main() {
 	flag.Parse()
 
 	var config util.Config
+	var alreadyCached bool
 	config, err := util.ReadFromCache()
 	if err != nil {
 		fmt.Println("** Failed to read from cache, maybe you've never logged in yet. **")
@@ -23,6 +24,7 @@ func main() {
 		config = util.GetLoginDetails()
 	} else {
 		fmt.Printf("Logging in as %s\n", config.Email)
+		alreadyCached = true
 	}
 
 	sesh := session.NewSession(config.Email, config.Password, "Limestone")
@@ -31,9 +33,11 @@ func main() {
 		log.Fatal("Failed to login.")
 	}
 
-	err = util.CacheLoginDetails(config)
-	if err != nil {
-		fmt.Println("Failed to cache login details, you will need to input them again next time.")
+	if !alreadyCached {
+		err = util.CacheLoginDetails(config)
+		if err != nil {
+			fmt.Println("Failed to cache login details, you will need to input them again next time.")
+		}
 	}
 
 	err = servers.CheckServerStatus(&sesh)
