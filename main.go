@@ -68,13 +68,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = sesh.Logout()
-	if err != nil {
-		fmt.Println("Failed to log out this session, go to your Divolt settings and remove it.")
-	}
-
 	err = util.DownloadFileFromDescription(message.Embeds[0].Description, *directory)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	err = sesh.Logout()
+	if err != nil {
+		fmt.Println("Failed to log out this session, go to your Divolt settings and remove it.")
 	}
 }
