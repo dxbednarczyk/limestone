@@ -15,7 +15,7 @@ func main() {
 	flag.Parse()
 
 	var config util.Config
-	alreadyCached := false
+	var alreadyCached bool
 	config, err := util.ReadFromCache()
 	if err != nil {
 		fmt.Println("** Failed to read from cache, maybe you've never logged in yet. **")

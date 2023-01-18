@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sacOO7/gowebsocket"
@@ -24,7 +25,6 @@ type Message struct {
 }
 
 const music_dl_request_channel_id = "01G9AZ9AMWDV227YA7FQ5RV8WB"
-const music_dl_uploads_channel_id = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
 
 func SendDownloadMessage(sesh *session.Session, url string) error {
 	content := fmt.Sprintf(`{"content":"!dl %s"}`, url)
@@ -93,6 +93,13 @@ func GetUploadMessage(sesh *session.Session) (Message, error) {
 		case "Authenticated":
 			fmt.Println("Authenticated.")
 			fmt.Print("Waiting for a response... ")
+
+			go func() {
+				for {
+					time.Sleep(10 * time.Second)
+					socket.SendText("{\"type\":\"Ping\",\"data\":0}")
+				}
+			}()
 		case "Message":
 			err := json.Unmarshal([]byte(textMessage), &message)
 			if err != nil {
