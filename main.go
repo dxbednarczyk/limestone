@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"limestone/routes/auth/session"
+	"limestone/routes/auth"
 	"limestone/routes/channels"
 	"limestone/routes/servers"
 	"limestone/util"
@@ -15,25 +15,24 @@ func main() {
 	flag.Parse()
 
 	var config util.Config
-	var alreadyCached bool
 	config, err := util.ReadFromCache()
 	if err != nil {
-		fmt.Println("** Failed to read from cache, maybe you've never logged in yet. **")
-		fmt.Println("** Otherwise, remove config.toml from the config directory. **")
+		fmt.Println("** Failed to read from cache, maybe you've never logged in yet **")
+		fmt.Println("** If not, delete ~/.config/limestone to regenerate cache next time you log in **")
 
 		util.GetLoginDetails(&config)
 	} else {
 		fmt.Printf("Logging in as %s\n", config.Email)
-		alreadyCached = true
+		config.Cached = true
 	}
 
-	sesh := session.NewSession(config.Email, config.Password, "Limestone")
+	sesh := auth.NewSession(config.Email, config.Password, "Limestone")
 	err = sesh.Login()
 	if err != nil {
 		log.Fatal("Failed to login.")
 	}
 
-	if !alreadyCached {
+	if !config.Cached {
 		err = util.CacheLoginDetails(config)
 		if err != nil {
 			fmt.Println("Failed to cache login details, you will need to input them again next time.")
@@ -56,13 +55,13 @@ func main() {
 		log.Fatal("Invalid URL provided.")
 	}
 
-	err = channels.SendDownloadMessage(&sesh, albumUrl)
+	id, err := channels.SendDownloadMessage(&sesh, albumUrl)
 	if err != nil {
 		sesh.Logout()
 		log.Fatal(err)
 	}
 
-	message, err := channels.GetUploadMessage(&sesh)
+	message, err := channels.GetUploadMessage(&sesh, id)
 	if err != nil {
 		sesh.Logout()
 		log.Fatal(err)

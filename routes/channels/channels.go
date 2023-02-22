@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"limestone/routes/auth/session"
+	"limestone/routes/auth"
 	"limestone/util"
 	"log"
 	"net/http"
@@ -22,47 +22,65 @@ type Message struct {
 	Embeds  []struct {
 		Description string `json:"description"`
 	} `json:"embeds"`
+	Replies []string `json:"replies"`
 }
 
-const music_dl_request_channel_id = "01G9AZ9AMWDV227YA7FQ5RV8WB"
+type messageInfo struct {
+	Author  string `json:"author"`
+	Channel string `json:"channel"`
+}
 
-func SendDownloadMessage(sesh *session.Session, url string) error {
+type messageType struct {
+	Type string `json:"type"`
+}
+
+const requestChannelID = "01G9AZ9AMWDV227YA7FQ5RV8WB"
+const uploadsChannelID = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
+const botUserID = "01G9824MQPGD7GVYR0F6A6GJ2Q"
+
+func SendDownloadMessage(sesh *auth.Session, url string) (string, error) {
 	content := fmt.Sprintf(`{"content":"!dl %s"}`, url)
 
-	req, err := util.RequestWithSessionToken(
+	req, err := util.AuthenticatedRequest(
 		http.MethodPost,
-		fmt.Sprintf("channels/%s/messages", music_dl_request_channel_id),
+		fmt.Sprintf("channels/%s/messages", requestChannelID),
 		strings.NewReader(content),
-		sesh.Token,
 	)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req.Header.Add("Idempotency-Key", uuid.NewString())
 
 	resp, err := sesh.Client.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var derr session.DefaultError
-		err = util.UnmarshalResponseBody(resp, &derr)
+		var autherr auth.Error
+		err = util.UnmarshalResponseBody(resp, &autherr)
 		if err != nil {
-			return err
+			return "", err
 		}
 
-		return errors.New(derr.Error)
+		return "", errors.New(autherr.Error)
 	}
 
-	return nil
+	var message Message
+	err = util.UnmarshalResponseBody(resp, &message)
+	if err != nil {
+		return "", err
+	}
+
+	return message.Id, nil
 }
 
-func GetUploadMessage(sesh *session.Session) (Message, error) {
+func GetUploadMessage(sesh *auth.Session, sentId string) (Message, error) {
 	var message Message
+
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 
@@ -77,19 +95,13 @@ func GetUploadMessage(sesh *session.Session) (Message, error) {
 	}
 
 	socket.OnTextMessage = func(textMessage string, _ gowebsocket.Socket) {
-		rawData := struct {
-			Type string `json:"type"`
-		}{}
-
-		err := json.Unmarshal([]byte(textMessage), &rawData)
+		var mt messageType
+		err := json.Unmarshal([]byte(textMessage), &mt)
 		if err != nil {
-			socket.Close()
-			sesh.Logout()
-
-			log.Fatal(err)
+			abort(&socket, sesh, err)
 		}
 
-		switch rawData.Type {
+		switch mt.Type {
 		case "Authenticated":
 			fmt.Println("Authenticated.")
 			fmt.Print("Waiting for a response... ")
@@ -97,22 +109,33 @@ func GetUploadMessage(sesh *session.Session) (Message, error) {
 			go func() {
 				for {
 					time.Sleep(10 * time.Second)
-					socket.SendText("{\"type\":\"Ping\",\"data\":0}")
+					socket.SendText(`{"type":"Ping","data":0}"`)
 				}
 			}()
 		case "Message":
-			err := json.Unmarshal([]byte(textMessage), &message)
+			var mi messageInfo
+			err := json.Unmarshal([]byte(textMessage), &mi)
 			if err != nil {
-				socket.Close()
-				sesh.Logout()
-
-				log.Fatal(err)
+				abort(&socket, sesh, err)
 			}
 
-			if strings.Contains(message.Content, sesh.UserId) {
-				socket.Close()
-				wg.Done()
+			if mi.Channel != uploadsChannelID {
+				break
 			}
+			if mi.Author != botUserID {
+				break
+			}
+
+			err = json.Unmarshal([]byte(textMessage), &message)
+			if err != nil {
+				abort(&socket, sesh, err)
+			}
+
+			if !strings.Contains(message.Content, sesh.UserId) {
+				break
+			}
+
+			wg.Done()
 		}
 	}
 
@@ -122,4 +145,11 @@ func GetUploadMessage(sesh *session.Session) (Message, error) {
 	fmt.Println("Response recieved.")
 
 	return message, nil
+}
+
+func abort(socket *gowebsocket.Socket, sesh *auth.Session, err error) {
+	socket.Close()
+	sesh.Logout()
+
+	log.Fatal(err)
 }

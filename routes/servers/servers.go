@@ -3,19 +3,23 @@ package servers
 import (
 	"errors"
 	"fmt"
-	"limestone/routes/auth/session"
+	"limestone/routes/auth"
 	"limestone/util"
 	"net/http"
 )
 
-const slav_art_server_id = "01G96DF05GVMT53VKYH83RMZMN"
+type UserStatus struct {
+	JoinedAt string `json:"joined_at"`
+	Timeout  string `json:"timeout"`
+}
 
-func CheckServerStatus(sesh *session.Session) error {
-	req, err := util.RequestWithSessionToken(
+const slavArtServerID = "01G96DF05GVMT53VKYH83RMZMN"
+
+func CheckServerStatus(sesh *auth.Session) error {
+	req, err := util.AuthenticatedRequest(
 		http.MethodGet,
-		fmt.Sprintf("servers/%s/members/%s", slav_art_server_id, sesh.UserId),
+		fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.UserId),
 		nil,
-		sesh.Token,
 	)
 	if err != nil {
 		return err
@@ -29,28 +33,25 @@ func CheckServerStatus(sesh *session.Session) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var derr session.DefaultError
-		err = util.UnmarshalResponseBody(resp, &derr)
+		var autherr auth.Error
+		err = util.UnmarshalResponseBody(resp, &autherr)
 		if err != nil {
 			return err
 		}
 
-		return errors.New(derr.Error)
+		return errors.New(autherr.Error)
 	}
 
-	user := struct {
-		JoinedAt string `json:"joined_at"`
-		Timeout  string `json:"timeout"`
-	}{}
-	err = util.UnmarshalResponseBody(resp, &user)
+	var us UserStatus
+	err = util.UnmarshalResponseBody(resp, &us)
 	if err != nil {
 		return err
 	}
 
-	if user.JoinedAt == "" {
+	if us.JoinedAt == "" {
 		return errors.New("user not in slav art server")
 	}
-	if user.Timeout != "" {
+	if us.Timeout != "" {
 		return errors.New("user is in timeout")
 	}
 

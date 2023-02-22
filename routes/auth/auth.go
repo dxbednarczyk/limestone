@@ -1,4 +1,4 @@
-package session
+package auth
 
 import (
 	"bytes"
@@ -18,13 +18,20 @@ type Session struct {
 	DisplayName string
 }
 
+type authResult struct {
+	UniqueId     string `json:"_id"`
+	UserId       string `json:"user_id"`
+	SessionToken string `json:"token"`
+	DisplayName  string `json:"name"`
+}
+
 type loginDetails struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 	SessionName string `json:"friendly_name"`
 }
 
-type DefaultError struct {
+type Error struct {
 	Error string `json:"type"`
 }
 
@@ -54,36 +61,32 @@ func (sesh *Session) Login() error {
 		log.Fatal("Failed to login.")
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Failed validation")
+		return errors.New("failed validation")
 	}
 
 	defer resp.Body.Close()
 
-	result := struct {
-		UniqueId     string `json:"_id"`
-		UserId       string `json:"user_id"`
-		SessionToken string `json:"token"`
-		DisplayName  string `json:"name"`
-	}{}
-	err = util.UnmarshalResponseBody(resp, &result)
+	var ar authResult
+	err = util.UnmarshalResponseBody(resp, &ar)
 	if err != nil {
 		return err
 	}
 
-	sesh.Id = result.UniqueId
-	sesh.UserId = result.UserId
-	sesh.Token = result.SessionToken
-	sesh.DisplayName = result.DisplayName
+	sesh.Id = ar.UniqueId
+	sesh.UserId = ar.UserId
+	sesh.DisplayName = ar.DisplayName
+	sesh.Token = ar.SessionToken
+
+	util.SessionToken = ar.SessionToken
 
 	return nil
 }
 
 func (sesh *Session) Logout() error {
-	req, err := util.RequestWithSessionToken(
+	req, err := util.AuthenticatedRequest(
 		http.MethodPost,
 		"auth/session/logout",
 		nil,
-		sesh.Token,
 	)
 	if err != nil {
 		return err
@@ -99,13 +102,13 @@ func (sesh *Session) Logout() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		var derr DefaultError
-		err = util.UnmarshalResponseBody(resp, &derr)
+		var autherr Error
+		err = util.UnmarshalResponseBody(resp, &autherr)
 		if err != nil {
 			return err
 		}
 
-		return errors.New(derr.Error)
+		return errors.New(autherr.Error)
 	}
 
 	return nil

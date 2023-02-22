@@ -18,9 +18,11 @@ import (
 type Config struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Cached   bool
 }
 
 var homeDir, _ = os.UserHomeDir()
+var SessionToken string
 
 func IsUrlValid(url string) (bool, error) {
 	urls := []string{
@@ -60,7 +62,7 @@ func IsUrlValid(url string) (bool, error) {
 	return true, nil
 }
 
-func RequestWithSessionToken(method string, path string, body io.Reader, token string) (*http.Request, error) {
+func AuthenticatedRequest(method string, path string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(
 		method,
 		fmt.Sprintf("https://api.divolt.xyz/%s", path),
@@ -70,7 +72,7 @@ func RequestWithSessionToken(method string, path string, body io.Reader, token s
 		return &http.Request{}, err
 	}
 
-	req.Header.Add("x-session-token", token)
+	req.Header.Add("x-session-token", SessionToken)
 
 	return req, nil
 }
@@ -103,6 +105,8 @@ func DownloadFileFromDescription(description string, path string) error {
 	if !os.IsExist(err) {
 		return err
 	}
+
+	fmt.Println("Downloading...")
 
 	resp, err := http.Get(url)
 	if err != nil {
