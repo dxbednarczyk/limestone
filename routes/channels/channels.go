@@ -2,7 +2,6 @@ package channels
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"limestone/routes/auth"
 	"limestone/util"
@@ -60,13 +59,7 @@ func SendDownloadMessage(sesh *auth.Session, url string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var autherr auth.Error
-		err = util.UnmarshalResponseBody(resp, &autherr)
-		if err != nil {
-			return "", err
-		}
-
-		return "", errors.New(autherr.Error)
+		return "", auth.GetError(resp)
 	}
 
 	var message Message

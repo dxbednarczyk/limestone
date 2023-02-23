@@ -19,12 +19,12 @@ type Config struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Cached   bool
+	HomeDir  string
 }
 
-var homeDir, _ = os.UserHomeDir()
 var SessionToken string
 
-func IsUrlValid(url string) (bool, error) {
+func IsUrlValid(url string) bool {
 	urls := []string{
 		"qobuz.com",
 		"deezer.com",
@@ -44,22 +44,7 @@ func IsUrlValid(url string) (bool, error) {
 		}
 	}
 
-	if !contains {
-		return false, nil
-	}
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return false, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return false, nil
-	}
-
-	return true, nil
+	return contains
 }
 
 func AuthenticatedRequest(method string, path string, body io.Reader) (*http.Request, error) {
@@ -91,17 +76,11 @@ func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
 	return nil
 }
 
-func DownloadFileFromDescription(description string, path string) error {
+func DownloadFromMessage(description string, path string) error {
 	splitDesc := strings.Split(description, "\n")
-	idx := len(splitDesc)
-	url := strings.TrimSpace(splitDesc[idx-1])
+	url := strings.TrimSpace(splitDesc[len(splitDesc)-1])
 
-	var err error
-	if path == "" {
-		path = fmt.Sprintf("%s/Downloads", homeDir)
-	}
-
-	err = os.Mkdir(path, os.ModePerm)
+	err := os.Mkdir(path, os.ModePerm)
 	if !os.IsExist(err) {
 		return err
 	}
@@ -115,12 +94,12 @@ func DownloadFileFromDescription(description string, path string) error {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusPartialContent {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return errors.New("status not ok")
 	}
 
-	newUuid := uuid.NewString()
-	filename := fmt.Sprintf("%s/%s.zip", path, newUuid)
+	uuid := uuid.NewString()
+	filename := fmt.Sprintf("%s/%s.zip", path, uuid)
 
 	dest, err := os.Create(filename)
 	if err != nil {
@@ -130,12 +109,12 @@ func DownloadFileFromDescription(description string, path string) error {
 	defer dest.Close()
 
 	// create bar
-	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+	length, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 	if err != nil {
 		return err
 	}
 
-	bar := pb.New(contentLength).SetUnits(pb.U_BYTES).SetRefreshRate(time.Millisecond * 10)
+	bar := pb.New(length).SetUnits(pb.U_BYTES).SetRefreshRate(time.Millisecond * 10)
 	bar.ShowSpeed = true
 	bar.Start()
 
@@ -151,7 +130,7 @@ func DownloadFileFromDescription(description string, path string) error {
 }
 
 func CacheLoginDetails(config Config) error {
-	path := fmt.Sprintf("%s/.config/limestone", homeDir)
+	path := fmt.Sprintf("%s/.config/limestone", config.HomeDir)
 	file_path := fmt.Sprintf("%s/config.json", path)
 
 	_, err := os.Stat(file_path)
@@ -187,23 +166,39 @@ func CacheLoginDetails(config Config) error {
 	return nil
 }
 
-func ReadFromCache() (Config, error) {
-	path := fmt.Sprintf("%s/.config/limestone/config.json", homeDir)
+func readFromCache(config *Config) error {
+	path := fmt.Sprintf("%s/.config/limestone/config.json", config.HomeDir)
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return Config{}, err
+		return err
 	}
 
-	var config Config
 	err = json.Unmarshal(content, &config)
 	if err != nil {
-		return Config{}, err
+		return err
 	}
 
-	return config, nil
+	if config.Email == "" || config.Password == "" {
+		return errors.New("empty email or password")
+	}
+
+	return nil
 }
 
-func GetLoginDetails(config *Config) {
+func (config *Config) GetLoginDetails() error {
+	err := readFromCache(config)
+	if err != nil {
+		return err
+	}
+
+	if !(config.Email == "" || config.Password == "") {
+		config.Cached = true
+		return nil
+	}
+
+	fmt.Println("** Failed to read from cache, maybe you've never logged in yet **")
+	fmt.Println("** If not, delete ~/.config/limestone to regenerate cache next time you log in **")
+
 	var email string
 	fmt.Println("Enter your Divolt account's email address:")
 	fmt.Scanln(&email)
@@ -214,4 +209,6 @@ func GetLoginDetails(config *Config) {
 
 	config.Email = email
 	config.Password = password
+
+	return nil
 }

@@ -102,14 +102,18 @@ func (sesh *Session) Logout() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		var autherr Error
-		err = util.UnmarshalResponseBody(resp, &autherr)
-		if err != nil {
-			return err
-		}
-
-		return errors.New(autherr.Error)
+		return GetError(resp)
 	}
 
 	return nil
+}
+
+func GetError(resp *http.Response) error {
+	var autherr Error
+	err := util.UnmarshalResponseBody(resp, &autherr)
+	if err != nil {
+		return err
+	}
+
+	return errors.New(autherr.Error)
 }

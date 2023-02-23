@@ -8,22 +8,40 @@ import (
 	"limestone/routes/servers"
 	"limestone/util"
 	"log"
+	"os"
 )
 
 func main() {
-	directory := flag.String("dir", "", "specify an absolute directory to download files to, defaults to ~/Downloads")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println("Failed to find user home directory")
+	}
+
+	var path string
+	if home != "" {
+		path = home + "/Downloads"
+	}
+
+	directory := flag.String("d", path, "specify an absolute directory to download files to")
 	flag.Parse()
 
-	var config util.Config
-	config, err := util.ReadFromCache()
-	if err != nil {
-		fmt.Println("** Failed to read from cache, maybe you've never logged in yet **")
-		fmt.Println("** If not, delete ~/.config/limestone to regenerate cache next time you log in **")
+	if *directory == "" {
+		log.Fatal("No download path specified.")
+	}
 
-		util.GetLoginDetails(&config)
-	} else {
-		fmt.Printf("Logging in as %s\n", config.Email)
-		config.Cached = true
+	var url string
+	fmt.Println("Input the album/track to download:")
+	fmt.Scanln(&url)
+
+	valid := util.IsUrlValid(url)
+	if !valid {
+		log.Fatal("Invalid URL provided.")
+	}
+
+	var config util.Config
+	err = config.GetLoginDetails()
+	if err != nil {
+		log.Fatal("Failed to get login details.")
 	}
 
 	sesh := auth.NewSession(config.Email, config.Password, "Limestone")
@@ -32,7 +50,8 @@ func main() {
 		log.Fatal("Failed to login.")
 	}
 
-	if !config.Cached {
+	if !config.Cached && home != "" {
+		config.HomeDir = home
 		err = util.CacheLoginDetails(config)
 		if err != nil {
 			fmt.Println("Failed to cache login details, you will need to input them again next time.")
@@ -45,17 +64,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var albumUrl string
-	fmt.Println("Input the album/track to download:")
-	fmt.Scanln(&albumUrl)
-
-	valid, err := util.IsUrlValid(albumUrl)
-	if !valid || err != nil {
-		sesh.Logout()
-		log.Fatal("Invalid URL provided.")
-	}
-
-	id, err := channels.SendDownloadMessage(&sesh, albumUrl)
+	id, err := channels.SendDownloadMessage(&sesh, url)
 	if err != nil {
 		sesh.Logout()
 		log.Fatal(err)
@@ -67,7 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = util.DownloadFileFromDescription(message.Embeds[0].Description, *directory)
+	err = util.DownloadFromMessage(message.Embeds[0].Description, *directory)
 	if err != nil {
 		log.Fatal(err)
 	}
