@@ -22,8 +22,6 @@ type Config struct {
 	HomeDir  string
 }
 
-var SessionToken string
-
 func IsUrlValid(url string) bool {
 	urls := []string{
 		"qobuz.com",
@@ -45,21 +43,6 @@ func IsUrlValid(url string) bool {
 	}
 
 	return contains
-}
-
-func AuthenticatedRequest(method string, path string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(
-		method,
-		fmt.Sprintf("https://api.divolt.xyz/%s", path),
-		body,
-	)
-	if err != nil {
-		return &http.Request{}, err
-	}
-
-	req.Header.Add("x-session-token", SessionToken)
-
-	return req, nil
 }
 
 func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {

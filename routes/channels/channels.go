@@ -40,7 +40,7 @@ const botUserID = "01G9824MQPGD7GVYR0F6A6GJ2Q"
 func SendDownloadMessage(sesh *auth.Session, url string) (string, error) {
 	content := fmt.Sprintf(`{"content":"!dl %s"}`, url)
 
-	req, err := util.AuthenticatedRequest(
+	req, err := sesh.AuthenticatedRequest(
 		http.MethodPost,
 		fmt.Sprintf("channels/%s/messages", requestChannelID),
 		strings.NewReader(content),

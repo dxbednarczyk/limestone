@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"limestone/util"
 	"log"
 	"net/http"
@@ -77,13 +79,11 @@ func (sesh *Session) Login() error {
 	sesh.DisplayName = ar.DisplayName
 	sesh.Token = ar.SessionToken
 
-	util.SessionToken = ar.SessionToken
-
 	return nil
 }
 
 func (sesh *Session) Logout() error {
-	req, err := util.AuthenticatedRequest(
+	req, err := sesh.AuthenticatedRequest(
 		http.MethodPost,
 		"auth/session/logout",
 		nil,
@@ -116,4 +116,19 @@ func GetError(resp *http.Response) error {
 	}
 
 	return errors.New(autherr.Error)
+}
+
+func (sesh *Session) AuthenticatedRequest(method string, path string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(
+		method,
+		fmt.Sprintf("https://api.divolt.xyz/%s", path),
+		body,
+	)
+	if err != nil {
+		return &http.Request{}, err
+	}
+
+	req.Header.Add("x-session-token", sesh.Token)
+
+	return req, nil
 }
