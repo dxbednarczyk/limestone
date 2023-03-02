@@ -1,88 +1,85 @@
 package main
 
 import (
-	"flag"
+	"errors"
 	"fmt"
-	"limestone/routes/auth"
-	"limestone/routes/channels"
-	"limestone/routes/servers"
 	"limestone/util"
-	"log"
 	"os"
+
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Println("Failed to find user home directory")
-	}
-
-	var path string
-	if home != "" {
-		path = home + "/Downloads"
-	}
-
-	directory := flag.String("d", path, "specify an absolute directory to download files to")
-	flag.Parse()
-
-	if *directory == "" {
-		log.Fatal("No download path specified.")
-	}
-
-	var url string
-	fmt.Println("Input the album/track to download:")
-	fmt.Scanln(&url)
-
-	valid := util.IsUrlValid(url)
-	if !valid {
-		log.Fatal("Invalid URL provided.")
-	}
-
 	var config util.Config
-	err = config.GetLoginDetails()
-	if err != nil {
-		log.Fatal("Failed to get login details.")
+
+	app := &cli.App{
+		Name:    "limestone",
+		Version: "0.2.0",
+		Authors: []*cli.Author{
+			{
+				Name:  "Damian Bednarczyk",
+				Email: "me@dxbednarczyk.com",
+			},
+		},
+		Usage:     "Unofficial Slav Art CLI",
+		UsageText: "limestone [divolt | web] [... args] <url>",
+		Flags: []cli.Flag{
+			&cli.PathFlag{Name: "dir"},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:      "divolt",
+				UsageText: "limestone divolt [... args] <url>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "email"},
+					&cli.StringFlag{Name: "pass"},
+				},
+				Before: func(ctx *cli.Context) error {
+					err := config.GetLoginDetails()
+					if err != nil && !os.IsNotExist(err) {
+						fmt.Fprintln(ctx.App.ErrWriter, err.Error())
+						return err
+					}
+
+					if config.Cached {
+						return nil
+					}
+
+					if ctx.String("email") == "" || ctx.String("pass") == "" {
+						fmt.Fprintln(ctx.App.ErrWriter, "no email or password specified")
+						return errors.New("no email or password specified")
+					}
+
+					config.Email = ctx.String("email")
+					config.Password = ctx.String("pass")
+
+					return nil
+				},
+				Action: func(ctx *cli.Context) error {
+					err := divoltDownload(ctx, config)
+					if err != nil {
+						fmt.Fprintln(ctx.App.ErrWriter, err.Error())
+						return err
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:      "web",
+				UsageText: "limestone web <url>",
+				Action: func(ctx *cli.Context) error {
+					err := webDownload(ctx)
+					if err != nil {
+						fmt.Fprintln(ctx.App.ErrWriter, err.Error())
+						return err
+					}
+
+					return nil
+				},
+			},
+		},
 	}
 
-	sesh := auth.NewSession(config.Email, config.Password, "Limestone")
-	err = sesh.Login()
-	if err != nil {
-		log.Fatal("Failed to login.")
-	}
-
-	if !config.Cached && home != "" {
-		config.HomeDir = home
-		err = util.CacheLoginDetails(config)
-		if err != nil {
-			fmt.Println("Failed to cache login details, you will need to input them again next time.")
-		}
-	}
-
-	err = servers.CheckServerStatus(&sesh)
-	if err != nil {
-		sesh.Logout()
-		log.Fatal(err)
-	}
-
-	id, err := channels.SendDownloadMessage(&sesh, url)
-	if err != nil {
-		sesh.Logout()
-		log.Fatal(err)
-	}
-
-	message, err := channels.GetUploadMessage(&sesh, id)
-	if err != nil {
-		sesh.Logout()
-		log.Fatal(err)
-	}
-
-	err = util.DownloadFromMessage(message.Embeds[0].Description, *directory)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = sesh.Logout()
-	if err != nil {
-		fmt.Println("Failed to log out this session, go to your Divolt settings and remove it.")
-	}
+	app.Run(os.Args)
 }

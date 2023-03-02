@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -16,22 +17,21 @@ import (
 )
 
 type Config struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Cached   bool
-	HomeDir  string
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	Cached    bool
+	ConfigDir string
 }
+
+var linkRegex = regexp.MustCompile(`((http|https)://)(www.)?[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%._\+~#?&//=]*)`)
 
 func IsUrlValid(url string) bool {
 	urls := []string{
-		"qobuz.com",
+		"qobuz",
 		"deezer.com",
-		"listen.tidal.com",
-		"tidal.com/browse",
-		"music.youtube.com",
-		"soundcloud.com",
-		"music.apple.com",
-		"open.spotify.com",
+		"tidal",
+		"soundcloud",
+		"spotify",
 	}
 
 	var contains bool
@@ -42,7 +42,7 @@ func IsUrlValid(url string) bool {
 		}
 	}
 
-	return contains
+	return contains && linkRegex.MatchString(url)
 }
 
 func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
@@ -113,44 +113,44 @@ func DownloadFromMessage(description string, path string) error {
 }
 
 func CacheLoginDetails(config Config) error {
-	path := fmt.Sprintf("%s/.config/limestone", config.HomeDir)
-	file_path := fmt.Sprintf("%s/config.json", path)
+	file_path := fmt.Sprintf("%s/limestone/config.json", config.ConfigDir)
 
-	_, err := os.Stat(file_path)
-	if !os.IsNotExist(err) {
-		return err
-	}
-
-	err = os.MkdirAll(path, os.ModePerm)
+	err := os.MkdirAll(config.ConfigDir+"/limestone", os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	dest, err := os.Create(file_path)
-	if err != nil {
+	var dest *os.File
+
+	_, err = os.Stat(file_path)
+	if os.IsNotExist(err) {
+		dest, err = os.Create(file_path)
+		if err != nil {
+			return err
+		}
+
+		defer dest.Close()
+	} else {
 		return err
 	}
-
-	defer dest.Close()
 
 	encoded, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	b, err := dest.Write(encoded)
+	_, err = dest.Write(encoded)
 	if err != nil {
 		return err
 	}
-	dest.Sync()
 
-	fmt.Printf("Wrote %d bytes to config.json\n", b)
+	dest.Sync()
 
 	return nil
 }
 
 func readFromCache(config *Config) error {
-	path := fmt.Sprintf("%s/.config/limestone/config.json", config.HomeDir)
+	path := fmt.Sprintf("%s/.config/limestone/config.json", config.ConfigDir)
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -178,20 +178,6 @@ func (config *Config) GetLoginDetails() error {
 		config.Cached = true
 		return nil
 	}
-
-	fmt.Println("** Failed to read from cache, maybe you've never logged in yet **")
-	fmt.Println("** If not, delete ~/.config/limestone to regenerate cache next time you log in **")
-
-	var email string
-	fmt.Println("Enter your Divolt account's email address:")
-	fmt.Scanln(&email)
-
-	var password string
-	fmt.Println("Enter your Divolt account's password:")
-	fmt.Scanln(&password)
-
-	config.Email = email
-	config.Password = password
 
 	return nil
 }
