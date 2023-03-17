@@ -12,10 +12,3 @@ $ git clone https://github.com/dxbednarczyk/limestone
 $ cd limestone
 $ go get && go build
 ```
-
-## Roadmap
-
-- [x] Initial implementation
-- [x] Caching of login details (plaintext will do for now, improve in future)
-- [ ] Pretty it up using [Bubbletea](https://github.com/charmbracelet/bubbletea)
-- [ ] Ease of use for users not used to Slav Art (creating accounts, provider list)
