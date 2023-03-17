@@ -1,9 +1,8 @@
-package servers
+package divolt
 
 import (
 	"errors"
 	"fmt"
-	"limestone/routes/auth"
 	"limestone/util"
 	"net/http"
 )
@@ -15,7 +14,7 @@ type UserStatus struct {
 
 const slavArtServerID = "01G96DF05GVMT53VKYH83RMZMN"
 
-func CheckServerStatus(sesh *auth.Session) error {
+func CheckServerStatus(sesh *Session) error {
 	req, err := sesh.AuthenticatedRequest(
 		http.MethodGet,
 		fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.UserId),
@@ -33,7 +32,7 @@ func CheckServerStatus(sesh *auth.Session) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return auth.GetError(resp)
+		return AuthError(resp)
 	}
 
 	var us UserStatus

@@ -1,4 +1,4 @@
-package auth
+package divolt
 
 import (
 	"bytes"
@@ -102,13 +102,13 @@ func (sesh *Session) Logout() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		return GetError(resp)
+		return AuthError(resp)
 	}
 
 	return nil
 }
 
-func GetError(resp *http.Response) error {
+func AuthError(resp *http.Response) error {
 	var autherr Error
 	err := util.UnmarshalResponseBody(resp, &autherr)
 	if err != nil {

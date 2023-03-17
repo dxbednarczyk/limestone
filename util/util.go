@@ -17,10 +17,9 @@ import (
 )
 
 type Config struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Cached    bool
-	ConfigDir string
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Cached   bool
 }
 
 var linkRegex = regexp.MustCompile(`((http|https)://)(www.)?[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%._\+~#?&//=]*)`)
@@ -104,7 +103,7 @@ func DownloadFromMessage(description string, path string) error {
 	// create proxy reader
 	reader := bar.NewProxyReader(resp.Body)
 
-	// and copy from reader
+	// copy from reader
 	io.Copy(dest, reader)
 	bar.Finish()
 
@@ -113,13 +112,17 @@ func DownloadFromMessage(description string, path string) error {
 }
 
 func CacheLoginDetails(config Config) error {
-	file_path := fmt.Sprintf("%s/limestone/config.json", config.ConfigDir)
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return errors.New("failed to get user config directory")
+	}
 
-	err := os.MkdirAll(config.ConfigDir+"/limestone", os.ModePerm)
+	err = os.MkdirAll(dir+"/limestone", os.ModePerm)
 	if err != nil {
 		return err
 	}
 
+	file_path := fmt.Sprintf("%s/limestone/config.json", dir)
 	var dest *os.File
 
 	_, err = os.Stat(file_path)
@@ -149,8 +152,13 @@ func CacheLoginDetails(config Config) error {
 	return nil
 }
 
-func readFromCache(config *Config) error {
-	path := fmt.Sprintf("%s/.config/limestone/config.json", config.ConfigDir)
+func (config *Config) GetLoginDetails() error {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("%s/limestone/config.json", dir)
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -161,22 +169,8 @@ func readFromCache(config *Config) error {
 		return err
 	}
 
-	if config.Email == "" || config.Password == "" {
-		return errors.New("empty email or password")
-	}
-
-	return nil
-}
-
-func (config *Config) GetLoginDetails() error {
-	err := readFromCache(config)
-	if err != nil {
-		return err
-	}
-
 	if !(config.Email == "" || config.Password == "") {
 		config.Cached = true
-		return nil
 	}
 
 	return nil

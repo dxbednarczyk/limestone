@@ -17,3 +17,5 @@ go.sum
 
 # linux binary
 limestone
+
+*.sh

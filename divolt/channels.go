@@ -1,9 +1,8 @@
-package channels
+package divolt
 
 import (
 	"encoding/json"
 	"fmt"
-	"limestone/routes/auth"
 	"limestone/util"
 	"log"
 	"net/http"
@@ -37,7 +36,7 @@ const requestChannelID = "01G9AZ9AMWDV227YA7FQ5RV8WB"
 const uploadsChannelID = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
 const botUserID = "01G9824MQPGD7GVYR0F6A6GJ2Q"
 
-func SendDownloadMessage(sesh *auth.Session, url string) (string, error) {
+func SendDownloadMessage(sesh *Session, url string) (string, error) {
 	content := fmt.Sprintf(`{"content":"!dl %s"}`, url)
 
 	req, err := sesh.AuthenticatedRequest(
@@ -59,7 +58,7 @@ func SendDownloadMessage(sesh *auth.Session, url string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", auth.GetError(resp)
+		return "", AuthError(resp)
 	}
 
 	var message Message
@@ -71,7 +70,7 @@ func SendDownloadMessage(sesh *auth.Session, url string) (string, error) {
 	return message.Id, nil
 }
 
-func GetUploadMessage(sesh *auth.Session, sentId string) (Message, error) {
+func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
 	var message Message
 
 	wg := new(sync.WaitGroup)
@@ -140,7 +139,7 @@ func GetUploadMessage(sesh *auth.Session, sentId string) (Message, error) {
 	return message, nil
 }
 
-func abort(socket *gowebsocket.Socket, sesh *auth.Session, err error) {
+func abort(socket *gowebsocket.Socket, sesh *Session, err error) {
 	socket.Close()
 	sesh.Logout()
 
