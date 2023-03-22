@@ -12,6 +12,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sacOO7/gowebsocket"
+	ws "github.com/sacOO7/gowebsocket"
+	"github.com/urfave/cli"
 )
 
 type Message struct {
@@ -70,7 +72,7 @@ func SendDownloadMessage(sesh *Session, url string) (string, error) {
 	return message.Id, nil
 }
 
-func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
+func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, error) {
 	var message Message
 
 	wg := new(sync.WaitGroup)
@@ -79,14 +81,14 @@ func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
 	socket := gowebsocket.New("wss://ws.divolt.xyz")
 	defer socket.Close()
 
-	socket.OnConnected = func(_ gowebsocket.Socket) {
+	socket.OnConnected = func(_ ws.Socket) {
 		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Token)
 		socket.SendText(json)
 
-		fmt.Print("Waiting for authentication... ")
+		fmt.Fprint(ctx.App.Writer, "Waiting for authentication... ")
 	}
 
-	socket.OnTextMessage = func(textMessage string, _ gowebsocket.Socket) {
+	socket.OnTextMessage = func(textMessage string, _ ws.Socket) {
 		var mt messageType
 		err := json.Unmarshal([]byte(textMessage), &mt)
 		if err != nil {
@@ -95,8 +97,8 @@ func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
 
 		switch mt.Type {
 		case "Authenticated":
-			fmt.Println("Authenticated.")
-			fmt.Print("Waiting for a response... ")
+			fmt.Fprintln(ctx.App.Writer, "Authenticated.")
+			fmt.Fprint(ctx.App.Writer, "Waiting for a response... ")
 
 			go func() {
 				for {
@@ -134,7 +136,7 @@ func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
 	socket.Connect()
 	wg.Wait()
 
-	fmt.Println("Response recieved.")
+	fmt.Fprintln(ctx.App.Writer, "Response recieved.")
 
 	return message, nil
 }

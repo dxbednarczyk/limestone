@@ -14,6 +14,7 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"github.com/google/uuid"
+	"github.com/urfave/cli"
 )
 
 type Config struct {
@@ -58,7 +59,7 @@ func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
 	return nil
 }
 
-func DownloadFromMessage(description string, path string) error {
+func DownloadFromMessage(ctx *cli.Context, description string, path string) error {
 	splitDesc := strings.Split(description, "\n")
 	url := strings.TrimSpace(splitDesc[len(splitDesc)-1])
 
@@ -67,7 +68,7 @@ func DownloadFromMessage(description string, path string) error {
 		return err
 	}
 
-	fmt.Println("Downloading...")
+	fmt.Fprintln(ctx.App.Writer, "Downloading...")
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -80,8 +81,7 @@ func DownloadFromMessage(description string, path string) error {
 		return errors.New("status not ok")
 	}
 
-	uuid := uuid.NewString()
-	filename := fmt.Sprintf("%s/%s.zip", path, uuid)
+	filename := fmt.Sprintf("%s/%s.zip", path, uuid.NewString())
 
 	dest, err := os.Create(filename)
 	if err != nil {
@@ -107,7 +107,7 @@ func DownloadFromMessage(description string, path string) error {
 	io.Copy(dest, reader)
 	bar.Finish()
 
-	fmt.Printf("Downloaded to %s.\n", filename)
+	fmt.Fprintf(ctx.App.Writer, "Downloaded to %s.\n", filename)
 	return nil
 }
 
@@ -122,7 +122,7 @@ func CacheLoginDetails(config Config) error {
 		return err
 	}
 
-	file_path := fmt.Sprintf("%s/limestone/config.json", dir)
+	file_path := dir + "/limestone/config.json"
 	var dest *os.File
 
 	_, err = os.Stat(file_path)
@@ -158,7 +158,7 @@ func (config *Config) GetLoginDetails() error {
 		return err
 	}
 
-	path := fmt.Sprintf("%s/limestone/config.json", dir)
+	path := dir + "/limestone/config.json"
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return err

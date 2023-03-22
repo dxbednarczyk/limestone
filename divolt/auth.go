@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"limestone/util"
-	"log"
 	"net/http"
 )
 
@@ -60,7 +59,7 @@ func (sesh *Session) Login() error {
 		bytes.NewReader(body),
 	)
 	if err != nil {
-		log.Fatal("Failed to login.")
+		return errors.New("failed to send login request")
 	}
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("failed validation")
