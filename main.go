@@ -46,7 +46,7 @@ func main() {
 					}
 
 					if ctx.String("email") == "" || ctx.String("pass") == "" {
-						fmt.Fprintln(ctx.App.ErrWriter, "no email or password specified")
+						fmt.Fprintln(ctx.App.ErrWriter, "No email or password specified")
 						return errors.New("no email or password specified")
 					}
 

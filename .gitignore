@@ -15,7 +15,5 @@
 # vendor/
 go.sum
 
-# linux binary
-limestone
-
-*.sh
+# build directory
+build/
