@@ -14,7 +14,7 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"github.com/google/uuid"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type Config struct {

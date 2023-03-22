@@ -41,7 +41,7 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 		return errors.New("failed to send download request")
 	}
 
-	message, err := divolt.GetUploadMessage(&sesh, id)
+	message, err := divolt.GetUploadMessage(ctx, &sesh, id)
 	if err != nil {
 		sesh.Logout()
 		return errors.New("failed to get upload response")
@@ -55,7 +55,7 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 		}
 	}
 
-	err = util.DownloadFromMessage(message.Embeds[0].Description, path)
+	err = util.DownloadFromMessage(ctx, message.Embeds[0].Description, path)
 	if err != nil {
 		return errors.New("failed to download bot output")
 	}

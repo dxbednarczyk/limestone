@@ -11,9 +11,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sacOO7/gowebsocket"
 	ws "github.com/sacOO7/gowebsocket"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type Message struct {
@@ -78,7 +77,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 
-	socket := gowebsocket.New("wss://ws.divolt.xyz")
+	socket := ws.New("wss://ws.divolt.xyz")
 	defer socket.Close()
 
 	socket.OnConnected = func(_ ws.Socket) {
@@ -141,7 +140,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	return message, nil
 }
 
-func abort(socket *gowebsocket.Socket, sesh *Session, err error) {
+func abort(socket *ws.Socket, sesh *Session, err error) {
 	socket.Close()
 	sesh.Logout()
 
