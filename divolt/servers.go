@@ -3,8 +3,9 @@ package divolt
 import (
 	"errors"
 	"fmt"
-	"limestone/util"
 	"net/http"
+
+	"github.com/dxbednarczyk/limestone/util"
 )
 
 type UserStatus struct {

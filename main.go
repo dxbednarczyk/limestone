@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"limestone/divolt"
-	"limestone/util"
 	"os"
 	"syscall"
+
+	"github.com/dxbednarczyk/limestone/divolt"
+	"github.com/dxbednarczyk/limestone/util"
 
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
@@ -75,7 +76,7 @@ func main() {
 				},
 			},
 			{
-				Name: "login",
+				Name:      "login",
 				UsageText: "limestone login <email>",
 				Action: func(ctx *cli.Context) error {
 					email := ctx.Args().First()

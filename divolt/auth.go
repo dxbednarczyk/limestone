@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"limestone/util"
 	"net/http"
+
+	"github.com/dxbednarczyk/limestone/util"
 )
 
 type Session struct {

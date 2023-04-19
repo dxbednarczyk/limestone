@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"limestone/divolt"
-	"limestone/util"
 	"os"
+
+	"github.com/dxbednarczyk/limestone/divolt"
+	"github.com/dxbednarczyk/limestone/util"
 
 	"github.com/urfave/cli/v2"
 )

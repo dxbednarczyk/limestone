@@ -3,12 +3,13 @@ package divolt
 import (
 	"encoding/json"
 	"fmt"
-	"limestone/util"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dxbednarczyk/limestone/util"
 
 	"github.com/google/uuid"
 	ws "github.com/sacOO7/gowebsocket"
@@ -135,7 +136,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	socket.Connect()
 	wg.Wait()
 
-	fmt.Fprintln(ctx.App.Writer, "Response recieved.")
+	fmt.Fprintln(ctx.App.Writer, "Response received.")
 
 	return message, nil
 }

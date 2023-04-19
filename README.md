@@ -1,4 +1,5 @@
 # Limestone
+[![Go Report Card](https://goreportcard.com/badge/github.com/dxbednarczyk/limestone)](https://goreportcard.com/report/github.com/dxbednarczyk/limestone)
 
 CLI app for downloading music from Slav Art on [Divolt](https://divolt.xyz).
 
