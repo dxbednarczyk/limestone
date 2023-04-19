@@ -1,4 +1,4 @@
-module limestone
+module github.com/dxbednarczyk/limestone
 
 go 1.20
 
