@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cheggaaa/pb"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 )
@@ -96,14 +96,10 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 		return err
 	}
 
-	bar := pb.New(length).SetUnits(pb.U_BYTES).SetRefreshRate(time.Millisecond * 10)
-	bar.ShowSpeed = true
+	bar := pb.New(length).SetRefreshRate(time.Millisecond * 10)
 	bar.Start()
 
-	// create proxy reader
 	reader := bar.NewProxyReader(resp.Body)
-
-	// copy from reader
 	io.Copy(dest, reader)
 	bar.Finish()
 

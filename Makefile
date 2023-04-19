@@ -15,3 +15,5 @@ uninstall: $(PREFIX)/bin/limestone
 
 clean:
 	rm -rf build
+	go mod tidy
+	go clean

@@ -44,17 +44,10 @@ func main() {
 						return err
 					}
 
-					if config.Cached {
-						return nil
+					if !config.Cached || os.IsNotExist(err) {
+						fmt.Fprintln(ctx.App.ErrWriter, "Please run `limestone login` before downloading.")
+						return errors.New("no login details cached")
 					}
-
-					if ctx.String("email") == "" || ctx.String("pass") == "" {
-						fmt.Fprintln(ctx.App.ErrWriter, "No email or password specified")
-						return errors.New("no email or password specified")
-					}
-
-					config.Email = ctx.String("email")
-					config.Password = ctx.String("pass")
 
 					return nil
 				},
@@ -98,24 +91,28 @@ func main() {
 					}
 					password := string(bp)
 
+					fmt.Fprint(ctx.App.Writer, "\nLogging in...")
+
 					sesh := divolt.NewSession(email, password, "login test")
 					err = sesh.Login()
 					if err != nil {
 						return err
 					}
 
-					fmt.Println("\nLogin test successful.")
-
-					err = sesh.Logout()
-					if err != nil {
-						fmt.Fprintln(ctx.App.ErrWriter, "Failed to logout")
-						return err
-					}
+					fmt.Fprintln(ctx.App.Writer, " login successful.")
 
 					config.Email = email
 					config.Password = password
 					err = util.CacheLoginDetails(config)
 					if err != nil {
+						return err
+					}
+
+					fmt.Fprintln(ctx.App.Writer, "Login details cached.")
+
+					err = sesh.Logout()
+					if err != nil {
+						fmt.Fprintln(ctx.App.ErrWriter, "Failed to logout current session.")
 						return err
 					}
 
