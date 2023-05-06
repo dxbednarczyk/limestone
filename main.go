@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"os"
 	"syscall"
 
@@ -13,8 +13,11 @@ import (
 	"golang.org/x/term"
 )
 
+//nolint:funlen
 func main() {
 	var config util.Config
+
+	log.SetPrefix("")
 
 	app := &cli.App{
 		Name:    "limestone",
@@ -41,13 +44,11 @@ func main() {
 				Before: func(ctx *cli.Context) error {
 					err := config.GetLoginDetails()
 					if err != nil && !os.IsNotExist(err) {
-						fmt.Fprintln(ctx.App.ErrWriter, err.Error())
 						return err
 					}
 
 					if !config.Cached || os.IsNotExist(err) {
-						fmt.Fprintln(ctx.App.ErrWriter, "Please run `limestone login` before downloading.")
-						return errors.New("no login details cached")
+						return errors.New("please run `limestone login` before downloading. (no login details cached)")
 					}
 
 					return nil
@@ -55,7 +56,6 @@ func main() {
 				Action: func(ctx *cli.Context) error {
 					err := divoltDownload(ctx, config)
 					if err != nil {
-						fmt.Fprintln(ctx.App.ErrWriter, err.Error())
 						return err
 					}
 
@@ -68,7 +68,6 @@ func main() {
 				Action: func(ctx *cli.Context) error {
 					err := webDownload(ctx)
 					if err != nil {
-						fmt.Fprintln(ctx.App.ErrWriter, err.Error())
 						return err
 					}
 
@@ -81,18 +80,17 @@ func main() {
 				Action: func(ctx *cli.Context) error {
 					email := ctx.Args().First()
 					if email == "" {
-						fmt.Fprintln(ctx.App.ErrWriter, "No email specified")
 						return errors.New("no email specified")
 					}
 
-					fmt.Printf("Enter the password for %s: ", email)
+					log.Printf("Enter the password for %s: ", email)
 					bp, err := term.ReadPassword(int(syscall.Stdin))
 					if err != nil {
 						return err
 					}
 					password := string(bp)
 
-					fmt.Fprint(ctx.App.Writer, "\nLogging in...")
+					log.Print("\nLogging in... ")
 
 					sesh := divolt.NewSession(email, password, "login test")
 					err = sesh.Login()
@@ -100,7 +98,7 @@ func main() {
 						return err
 					}
 
-					fmt.Fprintln(ctx.App.Writer, " login successful.")
+					log.Println("login successful.")
 
 					config.Email = email
 					config.Password = password
@@ -109,13 +107,9 @@ func main() {
 						return err
 					}
 
-					fmt.Fprintln(ctx.App.Writer, "Login details cached.")
+					log.Println("Login details cached.")
 
-					err = sesh.Logout()
-					if err != nil {
-						fmt.Fprintln(ctx.App.ErrWriter, "Failed to logout current session.")
-						return err
-					}
+					sesh.Logout()
 
 					return nil
 				},
@@ -123,5 +117,8 @@ func main() {
 		},
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

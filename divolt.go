@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/dxbednarczyk/limestone/divolt"
@@ -12,7 +12,7 @@ import (
 )
 
 func divoltDownload(ctx *cli.Context, config util.Config) error {
-	valid := util.IsUrlValid(ctx.Args().First())
+	valid := util.IsURLValid(ctx.Args().First())
 	if !valid {
 		return errors.New("invalid url provided")
 	}
@@ -26,7 +26,7 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 	if !config.Cached {
 		err = util.CacheLoginDetails(config)
 		if err != nil {
-			fmt.Fprintf(ctx.App.ErrWriter, "Failed to cache login details - %s\n", err)
+			log.Printf("Failed to cache login details: %s\n", err)
 		}
 	}
 
@@ -61,10 +61,7 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 		return errors.New("failed to download bot output")
 	}
 
-	err = sesh.Logout()
-	if err != nil {
-		fmt.Fprintln(ctx.App.ErrWriter, "Failed to log out this session")
-	}
+	sesh.Logout()
 
 	return nil
 }

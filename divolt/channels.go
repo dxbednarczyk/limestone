@@ -125,7 +125,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 				abort(&socket, sesh, err)
 			}
 
-			if !strings.Contains(message.Content, sesh.UserId) {
+			if !strings.Contains(message.Content, sesh.UserID) {
 				break
 			}
 

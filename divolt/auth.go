@@ -14,15 +14,15 @@ import (
 type Session struct {
 	Client      *http.Client
 	login       loginDetails
-	Id          string
-	UserId      string
+	ID          string
+	UserID      string
 	Token       string
 	DisplayName string
 }
 
 type authResult struct {
-	UniqueId     string `json:"_id"`
-	UserId       string `json:"user_id"`
+	UniqueID     string `json:"_id"`
+	UserID       string `json:"user_id"`
 	SessionToken string `json:"token"`
 	DisplayName  string `json:"name"`
 }
@@ -74,8 +74,8 @@ func (sesh *Session) Login() error {
 		return err
 	}
 
-	sesh.Id = ar.UniqueId
-	sesh.UserId = ar.UserId
+	sesh.ID = ar.UniqueID
+	sesh.UserID = ar.UserID
 	sesh.DisplayName = ar.DisplayName
 	sesh.Token = ar.SessionToken
 
@@ -89,20 +89,20 @@ func (sesh *Session) Logout() error {
 		nil,
 	)
 	if err != nil {
-		return err
+		return errors.New("failed to logout current session")
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := sesh.Client.Do(req)
 	if err != nil {
-		return err
+		return errors.New("failed to logout current session")
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		return AuthError(resp)
+		return errors.New("failed to logout current session")
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -25,7 +26,7 @@ type Config struct {
 
 var linkRegex = regexp.MustCompile(`((http|https)://)(www.)?[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%._\+~#?&//=]*)`)
 
-func IsUrlValid(url string) bool {
+func IsURLValid(url string) bool {
 	urls := []string{
 		"qobuz",
 		"deezer.com",
@@ -100,10 +101,15 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 	bar.Start()
 
 	reader := bar.NewProxyReader(resp.Body)
-	io.Copy(dest, reader)
+	_, err = io.Copy(dest, reader)
+
+	if err != nil {
+		return err
+	}
+
 	bar.Finish()
 
-	fmt.Fprintf(ctx.App.Writer, "Downloaded to %s.\n", filename)
+	log.Printf("Downloaded to %s.\n", filename)
 	return nil
 }
 
@@ -118,12 +124,12 @@ func CacheLoginDetails(config Config) error {
 		return err
 	}
 
-	file_path := dir + "/limestone/config.json"
+	filePath := dir + "/limestone/config.json"
 	var dest *os.File
 
-	_, err = os.Stat(file_path)
+	_, err = os.Stat(filePath)
 	if os.IsNotExist(err) {
-		dest, err = os.Create(file_path)
+		dest, err = os.Create(filePath)
 		if err != nil {
 			return err
 		}
@@ -143,7 +149,10 @@ func CacheLoginDetails(config Config) error {
 		return err
 	}
 
-	dest.Sync()
+	err = dest.Sync()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
