@@ -19,6 +19,9 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 
 	sesh := divolt.NewSession(config.Email, config.Password, "Limestone")
 	err := sesh.Login()
+
+	defer sesh.Logout()
+
 	if err != nil {
 		return errors.New("failed to login")
 	}
@@ -32,19 +35,16 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 
 	err = divolt.CheckServerStatus(&sesh)
 	if err != nil {
-		sesh.Logout()
 		return errors.New("invalid server status")
 	}
 
 	id, err := divolt.SendDownloadMessage(&sesh, ctx.Args().First())
 	if err != nil {
-		sesh.Logout()
 		return errors.New("failed to send download request")
 	}
 
 	message, err := divolt.GetUploadMessage(ctx, &sesh, id)
 	if err != nil {
-		sesh.Logout()
 		return errors.New("failed to get upload response")
 	}
 
@@ -60,8 +60,6 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 	if err != nil {
 		return errors.New("failed to download bot output")
 	}
-
-	sesh.Logout()
 
 	return nil
 }

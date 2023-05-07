@@ -69,7 +69,7 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 		return err
 	}
 
-	fmt.Fprintln(ctx.App.Writer, "Downloading...")
+	log.Println("Downloading...")
 
 	resp, err := http.Get(url)
 	if err != nil {

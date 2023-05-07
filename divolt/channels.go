@@ -85,7 +85,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Token)
 		socket.SendText(json)
 
-		fmt.Fprint(ctx.App.Writer, "Waiting for authentication... ")
+		log.Print("Waiting for authentication... ")
 	}
 
 	socket.OnTextMessage = func(textMessage string, _ ws.Socket) {
@@ -97,8 +97,8 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 
 		switch mt.Type {
 		case "Authenticated":
-			fmt.Fprintln(ctx.App.Writer, "Authenticated.")
-			fmt.Fprint(ctx.App.Writer, "Waiting for a response... ")
+			log.Println("Authenticated.")
+			log.Print("Waiting for a response... ")
 
 			go func() {
 				for {
@@ -136,11 +136,12 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	socket.Connect()
 	wg.Wait()
 
-	fmt.Fprintln(ctx.App.Writer, "Response received.")
+	log.Println("Response received.")
 
 	return message, nil
 }
 
+//nolint:errcheck
 func abort(socket *ws.Socket, sesh *Session, err error) {
 	socket.Close()
 	sesh.Logout()
