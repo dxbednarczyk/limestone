@@ -8,7 +8,6 @@ import (
 
 	"github.com/dxbednarczyk/limestone/divolt"
 	"github.com/dxbednarczyk/limestone/util"
-
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
 )
@@ -88,11 +87,10 @@ func main() {
 					if err != nil {
 						return err
 					}
-					password := string(bp)
 
 					log.Print("\nLogging in... ")
 
-					sesh := divolt.NewSession(email, password, "login test")
+					sesh := divolt.NewSession(email, string(bp), "login test")
 					err = sesh.Login()
 					if err != nil {
 						return err
@@ -101,7 +99,7 @@ func main() {
 					log.Println("login successful.")
 
 					config.Email = email
-					config.Password = password
+					config.Password = string(bp)
 					err = util.CacheLoginDetails(config)
 					if err != nil {
 						return err

@@ -13,11 +13,11 @@ uninstall: $(PREFIX)/bin/limestone
 clean: build/
 	rm -rf build
 
-.PHONY: reportcard
-reportcard:
+.PHONY: lint
+lint:
+	gci write --skip-generated . 
 	gofumpt -l -w .
+	
 	go vet
-
-#   not necessarily goreportcard related, but important project cleaning tools
 	go mod tidy
 	go clean

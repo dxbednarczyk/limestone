@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/dxbednarczyk/limestone/util"
@@ -82,30 +83,28 @@ func (sesh *Session) Login() error {
 	return nil
 }
 
-func (sesh *Session) Logout() error {
+func (sesh *Session) Logout() {
 	req, err := sesh.AuthenticatedRequest(
 		http.MethodPost,
 		"auth/session/logout",
 		nil,
 	)
 	if err != nil {
-		return errors.New("failed to logout current session")
+		log.Fatal("failed to logout current session")
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := sesh.Client.Do(req)
 	if err != nil {
-		return errors.New("failed to logout current session")
+		log.Fatal("failed to logout current session")
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.New("failed to logout current session")
+		log.Fatal("failed to logout current session")
 	}
-
-	return nil
 }
 
 func AuthError(resp *http.Response) error {

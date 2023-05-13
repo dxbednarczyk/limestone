@@ -10,14 +10,13 @@ import (
 	"time"
 
 	"github.com/dxbednarczyk/limestone/util"
-
 	"github.com/google/uuid"
 	ws "github.com/sacOO7/gowebsocket"
 	"github.com/urfave/cli/v2"
 )
 
 type Message struct {
-	Id      string `json:"_id"`
+	ID      string `json:"_id"`
 	Content string `json:"content"`
 	Embeds  []struct {
 		Description string `json:"description"`
@@ -71,7 +70,7 @@ func SendDownloadMessage(sesh *Session, url string) (string, error) {
 		return "", err
 	}
 
-	return message.Id, nil
+	return message.ID, nil
 }
 
 func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, error) {
@@ -99,8 +98,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 
 		switch mt.Type {
 		case "Authenticated":
-			log.Println("Authenticated.")
-			log.Print("Waiting for a response... ")
+			log.Print("Authenticated.\nWaiting for a response... ")
 
 			go func() {
 				for {
