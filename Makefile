@@ -15,7 +15,7 @@ clean: build/
 
 .PHONY: reportcard
 reportcard:
-	gofmt -s -w -l .
+	gofumpt -l -w .
 	go vet
 
 #   not necessarily goreportcard related, but important project cleaning tools

@@ -34,9 +34,11 @@ type messageType struct {
 	Type string `json:"type"`
 }
 
-const requestChannelID = "01G9AZ9AMWDV227YA7FQ5RV8WB"
-const uploadsChannelID = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
-const botUserID = "01G9824MQPGD7GVYR0F6A6GJ2Q"
+const (
+	requestChannelID = "01G9AZ9AMWDV227YA7FQ5RV8WB"
+	uploadsChannelID = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
+	botUserID        = "01G9824MQPGD7GVYR0F6A6GJ2Q"
+)
 
 func SendDownloadMessage(sesh *Session, url string) (string, error) {
 	content := fmt.Sprintf(`{"content":"!dl %s"}`, url)
