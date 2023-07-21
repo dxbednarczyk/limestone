@@ -74,10 +74,10 @@ func SendDownloadMessage(sesh *Session, url string) (string, error) {
 }
 
 func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, error) {
-	var message Message
-
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
+
+	var message Message
 
 	socket := ws.New("wss://ws.divolt.xyz")
 	defer socket.Close()

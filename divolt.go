@@ -16,10 +16,10 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 		return errors.New("invalid url provided")
 	}
 
-	sesh := divolt.NewSession(config.Email, config.Password, "Limestone")
-	err := sesh.Login()
+	session := divolt.NewSession(config.Email, config.Password, "Limestone")
+	err := session.Login()
 
-	defer sesh.Logout()
+	defer session.Logout()
 
 	if err != nil {
 		return errors.New("failed to login")
@@ -32,17 +32,17 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 		}
 	}
 
-	err = divolt.CheckServerStatus(&sesh)
+	err = divolt.CheckServerStatus(&session)
 	if err != nil {
 		return errors.New("invalid server status")
 	}
 
-	id, err := divolt.SendDownloadMessage(&sesh, ctx.Args().First())
+	id, err := divolt.SendDownloadMessage(&session, ctx.Args().First())
 	if err != nil {
 		return errors.New("failed to send download request")
 	}
 
-	message, err := divolt.GetUploadMessage(ctx, &sesh, id)
+	message, err := divolt.GetUploadMessage(ctx, &session, id)
 	if err != nil {
 		return errors.New("failed to get upload response")
 	}

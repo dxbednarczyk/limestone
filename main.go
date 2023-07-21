@@ -77,15 +77,15 @@ func main() {
 					}
 
 					fmt.Printf("Enter the password for %s: ", email)
-					bp, err := term.ReadPassword(int(syscall.Stdin))
+					passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
 					if err != nil {
 						return err
 					}
 
 					fmt.Print("\nLogging in... ")
 
-					sesh := divolt.NewSession(email, string(bp), "login test")
-					err = sesh.Login()
+					session := divolt.NewSession(email, string(passwordBytes), "login test")
+					err = session.Login()
 					if err != nil {
 						return err
 					}
@@ -93,7 +93,7 @@ func main() {
 					fmt.Println("login successful.")
 
 					config.Email = email
-					config.Password = string(bp)
+					config.Password = string(passwordBytes)
 					err = util.CacheLoginDetails(config)
 					if err != nil {
 						return err
@@ -101,7 +101,7 @@ func main() {
 
 					fmt.Println("Login details cached.")
 
-					sesh.Logout()
+					session.Logout()
 
 					return nil
 				},

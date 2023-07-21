@@ -20,7 +20,7 @@ import (
 type Config struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Cached   bool
+	Cached   bool   `json:"cached"`
 }
 
 //nolint:lll
@@ -110,22 +110,22 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 
 	bar.Finish()
 
-	fmt.Printf("Downloaded to %s.\n", filename)
+	fmt.Println("Downloaded to ", filename)
 	return nil
 }
 
 func CacheLoginDetails(config Config) error {
-	dir, err := os.UserConfigDir()
+	configDir, err := os.UserConfigDir()
 	if err != nil {
 		return errors.New("failed to get user config directory")
 	}
 
-	err = os.MkdirAll(dir+"/limestone", os.ModePerm)
+	err = os.MkdirAll(configDir+"/limestone", os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	filePath := dir + "/limestone/config.json"
+	filePath := configDir + "/limestone/config.json"
 	var dest *os.File
 
 	_, err = os.Stat(filePath)
