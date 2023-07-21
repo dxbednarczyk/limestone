@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -71,7 +70,7 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 		return err
 	}
 
-	log.Println("Downloading...")
+	fmt.Println("Downloading...")
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -111,7 +110,7 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 
 	bar.Finish()
 
-	log.Printf("Downloaded to %s.\n", filename)
+	fmt.Printf("Downloaded to %s.\n", filename)
 	return nil
 }
 

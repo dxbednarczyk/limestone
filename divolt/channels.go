@@ -3,8 +3,8 @@ package divolt
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -86,7 +86,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Token)
 		socket.SendText(json)
 
-		log.Print("Waiting for authentication... ")
+		fmt.Print("Waiting for authentication... ")
 	}
 
 	socket.OnTextMessage = func(textMessage string, _ ws.Socket) {
@@ -98,7 +98,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 
 		switch mt.Type {
 		case "Authenticated":
-			log.Print("Authenticated.\nWaiting for a response... ")
+			fmt.Print("Authenticated.\nWaiting for a response... ")
 
 			go func() {
 				for {
@@ -136,7 +136,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	socket.Connect()
 	wg.Wait()
 
-	log.Println("Response received.")
+	fmt.Println("Response received.")
 
 	return message, nil
 }
@@ -146,5 +146,6 @@ func abort(socket *ws.Socket, sesh *Session, err error) {
 	socket.Close()
 	sesh.Logout()
 
-	log.Fatal(err)
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"os"
 	"syscall"
 
@@ -15,8 +15,6 @@ import (
 //nolint:funlen
 func main() {
 	var config util.Config
-
-	log.SetPrefix("")
 
 	app := &cli.App{
 		Name:    "limestone",
@@ -65,11 +63,7 @@ func main() {
 				Name:      "web",
 				UsageText: "limestone web <url>",
 				Action: func(ctx *cli.Context) error {
-					err := webDownload(ctx)
-					if err != nil {
-						return err
-					}
-
+					fmt.Println("web is unimplemented.")
 					return nil
 				},
 			},
@@ -82,13 +76,13 @@ func main() {
 						return errors.New("no email specified")
 					}
 
-					log.Printf("Enter the password for %s: ", email)
+					fmt.Printf("Enter the password for %s: ", email)
 					bp, err := term.ReadPassword(int(syscall.Stdin))
 					if err != nil {
 						return err
 					}
 
-					log.Print("\nLogging in... ")
+					fmt.Print("\nLogging in... ")
 
 					sesh := divolt.NewSession(email, string(bp), "login test")
 					err = sesh.Login()
@@ -96,7 +90,7 @@ func main() {
 						return err
 					}
 
-					log.Println("login successful.")
+					fmt.Println("login successful.")
 
 					config.Email = email
 					config.Password = string(bp)
@@ -105,7 +99,7 @@ func main() {
 						return err
 					}
 
-					log.Println("Login details cached.")
+					fmt.Println("Login details cached.")
 
 					sesh.Logout()
 
@@ -117,6 +111,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }

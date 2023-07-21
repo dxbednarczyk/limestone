@@ -15,7 +15,6 @@ clean: build/
 
 .PHONY: lint
 lint:
-	gci write --skip-generated . 
 	gofumpt -l -w .
 	
 	go vet
