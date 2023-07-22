@@ -15,5 +15,6 @@
 # vendor/
 go.sum
 
-# build directory
+# build directories
 build/
+dist/
