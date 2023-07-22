@@ -1,6 +1,7 @@
-package main
+package web
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -57,24 +58,22 @@ func (t *track) FormatTime() string {
 	return fmt.Sprintf("%.0f minutes, %.0f seconds", minutes, seconds)
 }
 
-func webDownload(ctx *cli.Context) error {
+func Query(ctx *cli.Context) (*track, error) {
 	escaped := url.QueryEscape(ctx.Args().First())
-
-	fmt.Printf(`Getting results for query "%s"...`, escaped)
 
 	resp, err := http.Get("https://slavart.gamesdrive.net/api/search?q=" + escaped)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var searchData searchResponse
 
 	err = util.UnmarshalResponseBody(resp, &searchData)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	resp.Body.Close()
+	defer resp.Body.Close()
 
 	// this is extremely stupid.
 	items := make([]list.Item, len(searchData.Tracks.Items))
@@ -84,22 +83,30 @@ func webDownload(ctx *cli.Context) error {
 
 	choice, err := trackModel(items)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	resp, err = http.Get(fmt.Sprintf("https://slavart-api.gamesdrive.net/api/download/track?id=%d", choice.ID))
-	if err != nil {
-		return err
+	if choice.ID == 0 {
+		return nil, errors.New("no choice selected")
 	}
 
-	defer resp.Body.Close()
+	return &choice, nil
+}
 
+func Download(ctx *cli.Context, track *track) error {
 	path, err := util.GetDownloadPath(ctx)
 	if err != nil {
 		return err
 	}
 
-	filename := fmt.Sprintf("%s/%s - %s.flac", path, choice.Performer.Name, choice.Name)
+	filename := fmt.Sprintf("%s/%s - %s.flac", path, track.Performer.Name, track.Name)
+
+	resp, err := http.Get(fmt.Sprintf("https://slavart-api.gamesdrive.net/api/download/track?id=%d", track.ID))
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
 
 	err = util.DownloadWithProgressBar(resp, filename)
 

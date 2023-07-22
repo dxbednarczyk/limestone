@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"github.com/charmbracelet/bubbles/list"
@@ -6,7 +6,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var (
+	docStyle = lipgloss.NewStyle().Margin(1, 2)
+	cmd      tea.Cmd
+)
 
 type model struct {
 	choices list.Model
@@ -36,7 +39,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.choices.SetSize(msg.Width-h, msg.Height-v)
 	}
 
-	var cmd tea.Cmd
 	m.choices, cmd = m.choices.Update(msg)
 
 	return m, cmd

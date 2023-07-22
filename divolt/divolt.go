@@ -1,21 +1,20 @@
-package main
+package divolt
 
 import (
 	"errors"
 	"log"
 
-	"github.com/dxbednarczyk/limestone/divolt"
 	"github.com/dxbednarczyk/limestone/util"
 	"github.com/urfave/cli/v2"
 )
 
-func divoltDownload(ctx *cli.Context, config util.Config) error {
+func Download(ctx *cli.Context, config util.Config) error {
 	valid := util.IsURLValid(ctx.Args().First())
 	if !valid {
 		return errors.New("invalid url provided")
 	}
 
-	session := divolt.NewSession(config.Email, config.Password, "Limestone")
+	session := NewSession(config.Email, config.Password, "Limestone")
 	err := session.Login()
 
 	defer session.Logout()
@@ -31,17 +30,17 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 		}
 	}
 
-	err = divolt.CheckServerStatus(&session)
+	err = CheckServerStatus(&session)
 	if err != nil {
 		return errors.New("invalid server status")
 	}
 
-	id, err := divolt.SendDownloadMessage(&session, ctx.Args().First())
+	id, err := SendDownloadMessage(&session, ctx.Args().First())
 	if err != nil {
 		return errors.New("failed to send download request")
 	}
 
-	message, err := divolt.GetUploadMessage(ctx, &session, id)
+	message, err := GetUploadMessage(ctx, &session, id)
 	if err != nil {
 		return errors.New("failed to get upload response")
 	}

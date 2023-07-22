@@ -8,6 +8,7 @@ import (
 
 	"github.com/dxbednarczyk/limestone/divolt"
 	"github.com/dxbednarczyk/limestone/util"
+	"github.com/dxbednarczyk/limestone/web"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
 )
@@ -18,7 +19,7 @@ func main() {
 
 	app := &cli.App{
 		Name:    "limestone",
-		Version: "0.3.0",
+		Version: "0.3.1",
 		Authors: []*cli.Author{
 			{
 				Name:  "Damian Bednarczyk",
@@ -50,7 +51,7 @@ func main() {
 						return errors.New("please run `limestone login` before downloading. (no login details cached)")
 					}
 
-					err = divoltDownload(ctx, config)
+					err = divolt.Download(ctx, config)
 					if err != nil {
 						return err
 					}
@@ -71,7 +72,16 @@ func main() {
 					return nil
 				},
 				Action: func(ctx *cli.Context) error {
-					err := webDownload(ctx)
+					fmt.Printf(`Getting results for query "%s"...%s`, ctx.Args().First(), "\n")
+
+					track, err := web.Query(ctx)
+					if err != nil {
+						return err
+					}
+
+					fmt.Printf("Downloading %s - %s...\n", track.Performer.Name, track.Name)
+
+					err = web.Download(ctx, track)
 					if err != nil {
 						return err
 					}
