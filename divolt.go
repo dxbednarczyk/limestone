@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"log"
-	"os"
 
 	"github.com/dxbednarczyk/limestone/divolt"
 	"github.com/dxbednarczyk/limestone/util"
@@ -47,12 +46,9 @@ func divoltDownload(ctx *cli.Context, config util.Config) error {
 		return errors.New("failed to get upload response")
 	}
 
-	path := ctx.Path("dir")
-	if path == "" {
-		path, err = os.Getwd()
-		if err != nil {
-			return errors.New("failed to get working directory")
-		}
+	path, err := util.GetDownloadPath(ctx)
+	if err != nil {
+		return err
 	}
 
 	err = util.DownloadFromMessage(ctx, message.Embeds[0].Description, path)

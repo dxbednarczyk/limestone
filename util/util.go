@@ -85,6 +85,10 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 
 	filename := fmt.Sprintf("%s/%s.zip", path, uuid.NewString())
 
+	return DownloadWithProgressBar(resp, filename)
+}
+
+func DownloadWithProgressBar(resp *http.Response, filename string) error {
 	dest, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -111,7 +115,23 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 	bar.Finish()
 
 	fmt.Println("Downloaded to ", filename)
+
 	return nil
+}
+
+func GetDownloadPath(ctx *cli.Context) (string, error) {
+	var path string
+	var err error
+
+	path = ctx.Path("dir")
+	if path == "" {
+		path, err = os.Getwd()
+		if err != nil {
+			return "", errors.New("failed to get working directory")
+		}
+	}
+
+	return path, err
 }
 
 func CacheLoginDetails(config Config) error {

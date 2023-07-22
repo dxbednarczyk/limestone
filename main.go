@@ -18,7 +18,7 @@ func main() {
 
 	app := &cli.App{
 		Name:    "limestone",
-		Version: "0.2.0",
+		Version: "0.3.0",
 		Authors: []*cli.Author{
 			{
 				Name:  "Damian Bednarczyk",
@@ -28,17 +28,19 @@ func main() {
 		Usage:     "Unofficial Slav Art CLI",
 		UsageText: "limestone [divolt | web] [... args] <url>",
 		Flags: []cli.Flag{
-			&cli.PathFlag{Name: "dir"},
+			&cli.PathFlag{Name: "dir", Usage: "directory to save downloaded music to"},
 		},
 		Commands: []*cli.Command{
 			{
-				Name:      "divolt",
-				UsageText: "limestone divolt [... args] <url>",
+				Name: "divolt",
+				UsageText: `limestone divolt [... args] <url>
+		
+				You can download individual tracks or full albums using Divolt.`,
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "email"},
 					&cli.StringFlag{Name: "pass"},
 				},
-				Before: func(ctx *cli.Context) error {
+				Action: func(ctx *cli.Context) error {
 					err := config.GetLoginDetails()
 					if err != nil && !os.IsNotExist(err) {
 						return err
@@ -48,10 +50,7 @@ func main() {
 						return errors.New("please run `limestone login` before downloading. (no login details cached)")
 					}
 
-					return nil
-				},
-				Action: func(ctx *cli.Context) error {
-					err := divoltDownload(ctx, config)
+					err = divoltDownload(ctx, config)
 					if err != nil {
 						return err
 					}
@@ -60,10 +59,23 @@ func main() {
 				},
 			},
 			{
-				Name:      "web",
-				UsageText: "limestone web <url>",
+				Name: "web",
+				UsageText: `limestone web <query>
+				
+				You can only download individual tracks from Qobuz using the web download method.`,
+				Before: func(ctx *cli.Context) error {
+					if ctx.Args().First() == "" {
+						return errors.New("you must provide a query")
+					}
+
+					return nil
+				},
 				Action: func(ctx *cli.Context) error {
-					fmt.Println("web is unimplemented.")
+					err := webDownload(ctx)
+					if err != nil {
+						return err
+					}
+
 					return nil
 				},
 			},
@@ -111,7 +123,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }

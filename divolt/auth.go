@@ -21,17 +21,17 @@ type Session struct {
 	DisplayName string
 }
 
+type loginDetails struct {
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	SessionName string `json:"friendly_name"`
+}
+
 type authResult struct {
 	UniqueID     string `json:"_id"`
 	UserID       string `json:"user_id"`
 	SessionToken string `json:"token"`
 	DisplayName  string `json:"name"`
-}
-
-type loginDetails struct {
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-	SessionName string `json:"friendly_name"`
 }
 
 type Error struct {
