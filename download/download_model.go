@@ -15,6 +15,7 @@ type model struct {
 	err      error
 }
 
+// let the progress bar catch up
 func downloadComplete() tea.Cmd {
 	return tea.Tick(time.Millisecond*750, func(_ time.Time) tea.Msg {
 		return nil
@@ -43,7 +44,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmds []tea.Cmd
 
 		if msg >= 1.0 {
-			cmds = append(cmds, tea.Batch(downloadComplete(), tea.Quit))
+			cmds = append(cmds, tea.Sequence(downloadComplete(), tea.Quit))
 		}
 
 		cmds = append(cmds, m.progress.SetPercent(msg))
