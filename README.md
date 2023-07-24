@@ -30,16 +30,23 @@ $ limestone divolt -q 3 <url>
 ```bash
 $ limestone web "the police"
 Getting results for query "the police"...
-```
 
-Then, select a result from the TUI.
+# Searching for a track in the TUI... found one!
 
-```bash
-Downloading The Police - Every Breath You Take...
-
-████████████████████████████████████████████████ 100%
+# Fancy progress bar...
 
 Downloaded to /home/dxbednarczyk/Downloads/The Police - Every Breath You Take.flac
+```
+
+If you are calling `limestone` from a script or an environment that does not support TUIs, you can use the `-c` flag to download the closest match to your query.
+
+```bash
+$ limestone web -c "cherry bomb tyler the creator"
+Getting results for query "cherry bomb tyler the creator"...
+
+# Fancy progress bar...
+
+Downloaded to /home/dxbednarczyk/Downloads/Tyler, The Creator - CHERRY BOMB.flac
 ```
 
 ## Building
