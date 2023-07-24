@@ -78,14 +78,24 @@ func DownloadWithProgressBar(resp *http.Response, filename string) error {
 }
 
 func GetDownloadPath(ctx *cli.Context) (string, error) {
-	var path string
 	var err error
 
-	path = ctx.Path("dir")
+	path := ctx.Path("dir")
+
+	if path == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			goto trywd
+		}
+
+		path = home + "/Downloads"
+	}
+
+trywd:
 	if path == "" {
 		path, err = os.Getwd()
 		if err != nil {
-			return "", errors.New("failed to get working directory")
+			return "", err
 		}
 	}
 

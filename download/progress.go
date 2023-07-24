@@ -24,7 +24,6 @@ type progressErr struct {
 func (pw *progressWriter) Start(p *tea.Program) {
 	// TeeReader calls pw.Write() each time a new response is received
 	_, err := io.Copy(pw.destination, io.TeeReader(pw.reader, pw))
-
 	if err != nil {
 		p.Send(progressErr{err})
 	}

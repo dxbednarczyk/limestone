@@ -89,7 +89,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	defer socket.Close()
 
 	socket.OnConnected = func(_ ws.Socket) {
-		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Token)
+		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Authentication.Token)
 		socket.SendText(json)
 
 		fmt.Print("Waiting for authentication... ")
@@ -131,7 +131,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 				abort(&socket, sesh, err)
 			}
 
-			if !strings.Contains(message.Content, sesh.UserID) {
+			if !strings.Contains(message.Content, sesh.Authentication.UserID) {
 				break
 			}
 

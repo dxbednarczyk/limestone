@@ -2,7 +2,6 @@ package util
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 )
 
@@ -15,7 +14,7 @@ type Config struct {
 func CacheLoginDetails(config Config) error {
 	configDir, err := os.UserConfigDir()
 	if err != nil {
-		return errors.New("failed to get user config directory")
+		return err
 	}
 
 	err = os.MkdirAll(configDir+"/limestone", os.ModePerm)

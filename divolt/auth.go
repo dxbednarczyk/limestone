@@ -13,12 +13,16 @@ import (
 )
 
 type Session struct {
-	Client      *http.Client
-	login       loginDetails
-	ID          string
-	UserID      string
-	Token       string
-	DisplayName string
+	Client         *http.Client
+	Authentication *Authentication
+	loginDetails   loginDetails
+}
+
+type Authentication struct {
+	ID          string `json:"_id"`
+	UserID      string `json:"user_id"`
+	Token       string `json:"token"`
+	DisplayName string `json:"name"`
 }
 
 type loginDetails struct {
@@ -27,21 +31,14 @@ type loginDetails struct {
 	SessionName string `json:"friendly_name"`
 }
 
-type authResult struct {
-	UniqueID     string `json:"_id"`
-	UserID       string `json:"user_id"`
-	SessionToken string `json:"token"`
-	DisplayName  string `json:"name"`
-}
-
-type Error struct {
+type AuthenticationError struct {
 	Error string `json:"type"`
 }
 
 func NewSession(email string, password string, sessionName string) Session {
 	return Session{
-		Client: &http.Client{},
-		login: loginDetails{
+		Client: http.DefaultClient,
+		loginDetails: loginDetails{
 			email,
 			password,
 			sessionName,
@@ -50,7 +47,7 @@ func NewSession(email string, password string, sessionName string) Session {
 }
 
 func (sesh *Session) Login() error {
-	body, err := json.Marshal(sesh.login)
+	body, err := json.Marshal(sesh.loginDetails)
 	if err != nil {
 		return err
 	}
@@ -69,16 +66,13 @@ func (sesh *Session) Login() error {
 
 	defer resp.Body.Close()
 
-	var ar authResult
+	var ar Authentication
 	err = util.UnmarshalResponseBody(resp, &ar)
 	if err != nil {
 		return err
 	}
 
-	sesh.ID = ar.UniqueID
-	sesh.UserID = ar.UserID
-	sesh.DisplayName = ar.DisplayName
-	sesh.Token = ar.SessionToken
+	sesh.Authentication = &ar
 
 	return nil
 }
@@ -93,26 +87,26 @@ func (sesh *Session) Logout() {
 		nil,
 	)
 	if err != nil {
-		goto logoutErr
+		goto logouterr
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err = sesh.Client.Do(req)
 	if err != nil {
-		goto logoutErr
+		goto logouterr
 	}
 
 	resp.Body.Close()
 	return
 
-logoutErr:
+logouterr:
 	fmt.Fprintln(os.Stderr, "failed to logout current session")
 	os.Exit(1)
 }
 
 func AuthError(resp *http.Response) error {
-	var autherr Error
+	var autherr AuthenticationError
 	err := util.UnmarshalResponseBody(resp, &autherr)
 	if err != nil {
 		return err
@@ -131,7 +125,7 @@ func (sesh *Session) AuthenticatedRequest(method string, path string, body io.Re
 		return nil, err
 	}
 
-	req.Header.Add("x-session-token", sesh.Token)
+	req.Header.Add("x-session-token", sesh.Authentication.Token)
 
 	return req, nil
 }
