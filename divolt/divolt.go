@@ -2,7 +2,7 @@ package divolt
 
 import (
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/dxbednarczyk/limestone/download"
 	"github.com/dxbednarczyk/limestone/util"
@@ -27,7 +27,7 @@ func Download(ctx *cli.Context, config util.Config) error {
 	if !config.Cached {
 		err = util.CacheLoginDetails(config)
 		if err != nil {
-			log.Printf("Failed to cache login details: %s\n", err)
+			fmt.Printf("Failed to cache login details: %s\n", err)
 		}
 	}
 
@@ -36,9 +36,7 @@ func Download(ctx *cli.Context, config util.Config) error {
 		return errors.New("invalid server status")
 	}
 
-	quality := ctx.Uint("q")
-
-	id, err := SendDownloadMessage(&session, validated, quality)
+	id, err := SendDownloadMessage(&session, validated, ctx.Uint("quality"))
 	if err != nil {
 		return errors.New("failed to send download request")
 	}

@@ -26,11 +26,9 @@ func main() {
 				Email: "me@dxbednarczyk.com",
 			},
 		},
-		Usage:     "Unofficial Slav Art CLI",
-		UsageText: "limestone [divolt | web] [... args] <url>",
-		Metadata: map[string]any{
-			"faq": "https://rentry.org/slavart",
-		},
+		Usage: "Unofficial Slav Art CLI",
+		UsageText: `limestone [divolt | web] [... args] <url>
+See the FAQ at https://rentry.org/slavart`,
 		Flags: []cli.Flag{
 			&cli.PathFlag{Name: "dir", Usage: "directory to save downloaded music to"},
 		},
@@ -39,11 +37,11 @@ func main() {
 				Name: "divolt",
 				UsageText: `limestone divolt [... args] <url>
 		
-				You can download individual tracks or full albums using Divolt.`,
+You can download individual tracks or full albums using Divolt.`,
 				Flags: []cli.Flag{
 					&cli.UintFlag{
-						Name:        "q",
-						Aliases:     []string{"quality"},
+						Name:        "quality",
+						Aliases:     []string{"q"},
 						Usage:       "specify a number in the range 0-4",
 						Value:       999,
 						DefaultText: "highest available",
@@ -71,7 +69,7 @@ func main() {
 				Name: "web",
 				UsageText: `limestone web <query>
 				
-				You can only download individual tracks from Qobuz using the web download method.`,
+You can only download individual tracks from Qobuz using the web download method.`,
 				Before: func(ctx *cli.Context) error {
 					if ctx.Args().First() == "" {
 						return errors.New("you must provide a query")
@@ -84,6 +82,7 @@ func main() {
 
 					track, err := web.Query(ctx)
 					if err != nil {
+						fmt.Println()
 						return err
 					}
 
@@ -117,6 +116,7 @@ func main() {
 					session := divolt.NewSession(email, string(passwordBytes), "login test")
 					err = session.Login()
 					if err != nil {
+						fmt.Println()
 						return err
 					}
 
@@ -141,7 +141,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "\nError:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 }

@@ -68,5 +68,5 @@ func (m model) View() string {
 		return "Error downloading: " + m.err.Error() + "\n"
 	}
 
-	return "\n  " + m.progress.View() + "\n"
+	return "\n" + m.progress.View() + "\n\n"
 }
