@@ -128,7 +128,7 @@ func (sesh *Session) AuthenticatedRequest(method string, path string, body io.Re
 		body,
 	)
 	if err != nil {
-		return &http.Request{}, err
+		return nil, err
 	}
 
 	req.Header.Add("x-session-token", sesh.Token)

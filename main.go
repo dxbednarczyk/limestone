@@ -28,6 +28,9 @@ func main() {
 		},
 		Usage:     "Unofficial Slav Art CLI",
 		UsageText: "limestone [divolt | web] [... args] <url>",
+		Metadata: map[string]any{
+			"faq": "https://rentry.org/slavart",
+		},
 		Flags: []cli.Flag{
 			&cli.PathFlag{Name: "dir", Usage: "directory to save downloaded music to"},
 		},
@@ -38,8 +41,13 @@ func main() {
 		
 				You can download individual tracks or full albums using Divolt.`,
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "email"},
-					&cli.StringFlag{Name: "pass"},
+					&cli.UintFlag{
+						Name:        "q",
+						Aliases:     []string{"quality"},
+						Usage:       "specify a number in the range 0-4",
+						Value:       999,
+						DefaultText: "highest available",
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					err := config.GetLoginDetails()
@@ -133,7 +141,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
+		fmt.Fprintln(os.Stderr, "\nError:", err)
 		os.Exit(1)
 	}
 }

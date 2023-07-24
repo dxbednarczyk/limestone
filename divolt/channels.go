@@ -39,8 +39,14 @@ const (
 	botUserID        = "01G9824MQPGD7GVYR0F6A6GJ2Q"
 )
 
-func SendDownloadMessage(sesh *Session, url string) (string, error) {
-	content := fmt.Sprintf(`{"content":"!dl %s"}`, url)
+func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error) {
+	var content string
+
+	if quality <= 4 {
+		content = fmt.Sprintf(`{"content":"!dl %s %d"}`, url, quality)
+	} else {
+		content = fmt.Sprintf(`{"content":"!dl %s"}`, url)
+	}
 
 	req, err := sesh.AuthenticatedRequest(
 		http.MethodPost,

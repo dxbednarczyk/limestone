@@ -4,18 +4,19 @@ import (
 	"errors"
 	"log"
 
+	"github.com/dxbednarczyk/limestone/download"
 	"github.com/dxbednarczyk/limestone/util"
 	"github.com/urfave/cli/v2"
 )
 
 func Download(ctx *cli.Context, config util.Config) error {
-	valid := util.IsURLValid(ctx.Args().First())
-	if !valid {
+	validated, err := util.ValidateURL(ctx.Args().First())
+	if err != nil {
 		return errors.New("invalid url provided")
 	}
 
 	session := NewSession(config.Email, config.Password, "Limestone")
-	err := session.Login()
+	err = session.Login()
 
 	defer session.Logout()
 
@@ -35,7 +36,9 @@ func Download(ctx *cli.Context, config util.Config) error {
 		return errors.New("invalid server status")
 	}
 
-	id, err := SendDownloadMessage(&session, ctx.Args().First())
+	quality := ctx.Uint("q")
+
+	id, err := SendDownloadMessage(&session, validated, quality)
 	if err != nil {
 		return errors.New("failed to send download request")
 	}
@@ -45,12 +48,12 @@ func Download(ctx *cli.Context, config util.Config) error {
 		return errors.New("failed to get upload response")
 	}
 
-	path, err := util.GetDownloadPath(ctx)
+	path, err := download.GetDownloadPath(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = util.DownloadFromMessage(ctx, message.Embeds[0].Description, path)
+	err = download.DownloadFromMessage(ctx, message.Embeds[0].Description, path)
 	if err != nil {
 		return errors.New("failed to download bot output")
 	}

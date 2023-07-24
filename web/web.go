@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/dxbednarczyk/limestone/download"
 	"github.com/dxbednarczyk/limestone/util"
 	"github.com/urfave/cli/v2"
 )
@@ -94,7 +95,7 @@ func Query(ctx *cli.Context) (*track, error) {
 }
 
 func Download(ctx *cli.Context, track *track) error {
-	path, err := util.GetDownloadPath(ctx)
+	path, err := download.GetDownloadPath(ctx)
 	if err != nil {
 		return err
 	}
@@ -108,7 +109,7 @@ func Download(ctx *cli.Context, track *track) error {
 
 	defer resp.Body.Close()
 
-	err = util.DownloadWithProgressBar(resp, filename)
+	err = download.DownloadWithProgressBar(resp, filename)
 
 	return err
 }

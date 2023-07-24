@@ -3,49 +3,11 @@ package util
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"regexp"
-	"strconv"
+	"net/url"
 	"strings"
-	"time"
-
-	"github.com/cheggaaa/pb/v3"
-	"github.com/google/uuid"
-	"github.com/urfave/cli/v2"
 )
-
-type Config struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Cached   bool   `json:"cached"`
-}
-
-//nolint:lll
-var linkRegex = regexp.MustCompile(`((http|https)://)(www.)?[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%._\+~#?&//=]*)`)
-
-func IsURLValid(url string) bool {
-	urls := []string{
-		"qobuz",
-		"deezer.com",
-		"tidal",
-		"soundcloud",
-		"spotify",
-	}
-
-	var contains bool
-
-	for _, p := range urls {
-		if strings.Contains(url, p) {
-			contains = true
-			break
-		}
-	}
-
-	return contains && linkRegex.MatchString(url)
-}
 
 func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
 	body, err := io.ReadAll(resp.Body)
@@ -61,143 +23,44 @@ func UnmarshalResponseBody[T any](resp *http.Response, to *T) error {
 	return nil
 }
 
-func DownloadFromMessage(ctx *cli.Context, description string, path string) error {
-	splitDesc := strings.Split(description, "\n")
-	url := strings.TrimSpace(splitDesc[len(splitDesc)-1])
-
-	err := os.Mkdir(path, os.ModePerm)
-	if !os.IsExist(err) {
-		return err
+func ValidateURL(u string) (string, error) {
+	urls := []string{
+		"qobuz.com",
+		"deezer.com",
+		"tidal.com",
+		"soundcloud.com",
+		"open.spotify.com",
+		"music.youtube.com",
+		"music.apple.com",
 	}
 
-	fmt.Println("Downloading...")
+	var contains bool
 
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return errors.New("status not ok")
-	}
-
-	filename := fmt.Sprintf("%s/%s.zip", path, uuid.NewString())
-
-	return DownloadWithProgressBar(resp, filename)
-}
-
-func DownloadWithProgressBar(resp *http.Response, filename string) error {
-	dest, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-
-	defer dest.Close()
-
-	// create bar
-	length, err := strconv.Atoi(resp.Header.Get("Content-Length"))
-	if err != nil {
-		return err
-	}
-
-	bar := pb.New(length).SetRefreshRate(time.Millisecond * 10)
-	bar.Start()
-
-	reader := bar.NewProxyReader(resp.Body)
-	_, err = io.Copy(dest, reader)
-
-	if err != nil {
-		return err
-	}
-
-	bar.Finish()
-
-	fmt.Println("Downloaded to ", filename)
-
-	return nil
-}
-
-func GetDownloadPath(ctx *cli.Context) (string, error) {
-	var path string
-	var err error
-
-	path = ctx.Path("dir")
-	if path == "" {
-		path, err = os.Getwd()
-		if err != nil {
-			return "", errors.New("failed to get working directory")
+	for _, p := range urls {
+		if strings.Contains(u, p) {
+			contains = true
+			break
 		}
 	}
 
-	return path, err
-}
+	if !contains {
+		return "", errors.New("url does not contain one of the valid sources")
+	}
 
-func CacheLoginDetails(config Config) error {
-	configDir, err := os.UserConfigDir()
+	// remove invalid query at end of some urls, especially deezer
+	parsed, err := url.Parse(u)
 	if err != nil {
-		return errors.New("failed to get user config directory")
+		return "", err
 	}
 
-	err = os.MkdirAll(configDir+"/limestone", os.ModePerm)
-	if err != nil {
-		return err
-	}
+	queries := parsed.Query()
 
-	filePath := configDir + "/limestone/config.json"
-	var dest *os.File
+	queries.Del("deferredFl")
+	queries.Del("utm_campaign")
+	queries.Del("utm_source")
+	queries.Del("utm_medium")
 
-	_, err = os.Stat(filePath)
-	if os.IsNotExist(err) {
-		dest, err = os.Create(filePath)
-		if err != nil {
-			return err
-		}
+	parsed.RawQuery = queries.Encode()
 
-		defer dest.Close()
-	} else {
-		return err
-	}
-
-	encoded, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	_, err = dest.Write(encoded)
-	if err != nil {
-		return err
-	}
-
-	err = dest.Sync()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (config *Config) GetLoginDetails() error {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return err
-	}
-
-	path := dir + "/limestone/config.json"
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(content, &config)
-	if err != nil {
-		return err
-	}
-
-	if !(config.Email == "" || config.Password == "") {
-		config.Cached = true
-	}
-
-	return nil
+	return parsed.String(), nil
 }
