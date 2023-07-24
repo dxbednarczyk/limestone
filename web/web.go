@@ -12,7 +12,9 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/dxbednarczyk/limestone/download"
 	"github.com/dxbednarczyk/limestone/util"
+	"github.com/schollz/closestmatch"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/maps"
 )
 
 type searchResponse struct {
@@ -60,7 +62,9 @@ func (t *track) FormatTime() string {
 }
 
 func Query(ctx *cli.Context) (*track, error) {
-	escaped := url.QueryEscape(ctx.Args().First())
+	query := ctx.Args().First()
+
+	escaped := url.QueryEscape(query)
 
 	resp, err := http.Get("https://slavart.gamesdrive.net/api/search?q=" + escaped)
 	if err != nil {
@@ -75,6 +79,25 @@ func Query(ctx *cli.Context) (*track, error) {
 	}
 
 	defer resp.Body.Close()
+
+	if ctx.Bool("closest") {
+		tracks := make(map[string]*track)
+
+		for i := range searchData.Tracks.Items {
+			track := &searchData.Tracks.Items[i]
+
+			desc := fmt.Sprintf("%s - %s", track.Performer.Name, track.Name)
+
+			tracks[desc] = track
+		}
+
+		bagSizes := []int{2, 3}
+		cm := closestmatch.New(maps.Keys(tracks), bagSizes)
+
+		closest := cm.Closest(query)
+
+		return tracks[closest], nil
+	}
 
 	// this is extremely stupid.
 	items := make([]list.Item, len(searchData.Tracks.Items))

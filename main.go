@@ -19,7 +19,7 @@ func main() {
 
 	app := &cli.App{
 		Name:    "limestone",
-		Version: "0.3.1",
+		Version: "0.3.3",
 		Authors: []*cli.Author{
 			{
 				Name:  "Damian Bednarczyk",
@@ -70,6 +70,13 @@ You can download individual tracks or full albums using Divolt.`,
 				UsageText: `limestone web <query>
 				
 You can only download individual tracks from Qobuz using the web download method.`,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "closest",
+						Aliases: []string{"c"},
+						Usage:   "download the closest match to the query",
+					},
+				},
 				Before: func(ctx *cli.Context) error {
 					if ctx.Args().First() == "" {
 						return errors.New("you must provide a query")
