@@ -5,7 +5,11 @@ CLI app for downloading music from Slav Art.
 
 ## Usage
 
-You can use `limestone` to download zipped albums/tracks from the Slav Art server, provided you have an account on [Divolt](https://divolt.xyz). As of v0.3, `limestone` does not support multi-factor authentication.
+All commands have help/usage information available, just pass `--help` or `-h` as a flag.
+
+### Divolt 
+
+You can use `limestone` to download zipped albums/tracks from the Slav Art server, provided you have an account on [Divolt](https://divolt.xyz). `limestone` does not currently support multi-factor authentication.
 
 ```bash
 $ limestone login bob@example.com
@@ -14,14 +18,29 @@ Logging in... login successful.
 $ limestone divolt <url>
 ```
 
-If you don't want to cache your login details, you can pass in your email and password as flags:
-```
-$ limestone divolt --email "bob@bob.com" --pass "bob123!" <url>
+You can specify the quality of the download, according to the table on [the FAQ](https://rentry.org/slavart):
+```bash
+$ limestone divolt -q 3 <url>
 ```
 
-`limestone` also supports [the website](https://slavart.gamesdrive.net)'s API for individual tracks from Qobuz. You do not need to authenticate to use it.
+### Web
 
-All commands have help/usage information available, just pass `--help` or `-h` as a flag.
+`limestone` also supports [the website](https://slavart.gamesdrive.net)'s API for individual tracks from Qobuz. You do not need to authenticate to use it. This download method only downloads the highest quality available.
+
+```bash
+$ limestone web "the police"
+Getting results for query "the police"...
+```
+
+Then, select a result from the TUI.
+
+```bash
+Downloading The Police - Every Breath You Take...
+
+████████████████████████████████████████████████ 100%
+
+Downloaded to /home/dxbednarczyk/Downloads/The Police - Every Breath You Take.flac
+```
 
 ## Building
 
@@ -61,5 +80,3 @@ rm -f /home/damian/.local/bin/limestone
 ```
 
 ### Windows (planned)
-
-*crickets\*
