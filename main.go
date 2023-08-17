@@ -49,12 +49,12 @@ You can download individual tracks or full albums using Divolt.`,
 				},
 				Action: func(ctx *cli.Context) error {
 					err := config.GetLoginDetails()
-					if err != nil && !os.IsNotExist(err) {
+					if err != nil {
 						return err
 					}
 
-					if !config.Cached || os.IsNotExist(err) {
-						return errors.New("please run `limestone login` before downloading. (no login details cached)")
+					if os.IsNotExist(err) {
+						return errors.New("please authenticate using `limestone login`")
 					}
 
 					err = divolt.Download(ctx, config)

@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/sacOO7/gowebsocket v0.0.0-20221109081133-70ac927be105
 	github.com/urfave/cli/v2 v2.25.7
-	golang.org/x/term v0.10.0
+	golang.org/x/term v0.11.0
 )
 
 require (
@@ -33,8 +33,8 @@ require (
 	github.com/sahilm/fuzzy v0.1.0 // indirect
 	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 )

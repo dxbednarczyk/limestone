@@ -38,7 +38,7 @@ Getting results for query "the police"...
 Downloaded to /home/dxbednarczyk/Downloads/The Police - Every Breath You Take.flac
 ```
 
-If you are calling `limestone` from a script or an environment that does not support TUIs, you can use the `-c` flag to download the closest match to your query.
+You can also use the `-c` flag to automatically download the closest match to your query.
 
 ```bash
 $ limestone web -c "cherry bomb tyler the creator"

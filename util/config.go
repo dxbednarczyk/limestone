@@ -2,13 +2,13 @@ package util
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 )
 
 type Config struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Cached   bool   `json:"cached"`
 }
 
 func CacheLoginDetails(config Config) error {
@@ -72,8 +72,8 @@ func (config *Config) GetLoginDetails() error {
 		return err
 	}
 
-	if config.Email != "" && config.Password != "" {
-		config.Cached = true
+	if config.Email == "" || config.Password == "" {
+		return errors.New("email or password is empty")
 	}
 
 	return nil
