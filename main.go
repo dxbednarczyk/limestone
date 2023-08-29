@@ -120,7 +120,7 @@ You can only download individual tracks from Qobuz using the web download method
 
 					fmt.Print("\nLogging in... ")
 
-					session := divolt.NewSession(email, string(passwordBytes), "login test")
+					session := divolt.NewSession(email, string(passwordBytes))
 					err = session.Login()
 					if err != nil {
 						fmt.Println()

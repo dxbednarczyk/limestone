@@ -14,7 +14,7 @@ func Download(ctx *cli.Context, config util.Config) error {
 		return errors.New("invalid url provided")
 	}
 
-	session := NewSession(config.Email, config.Password, "Limestone")
+	session := NewSession(config.Email, config.Password)
 	err = session.Login()
 
 	defer session.Logout()

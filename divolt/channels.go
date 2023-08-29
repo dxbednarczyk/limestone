@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/dxbednarczyk/limestone/util"
-	"github.com/google/uuid"
 	ws "github.com/sacOO7/gowebsocket"
 	"github.com/urfave/cli/v2"
 )
@@ -22,15 +21,6 @@ type Message struct {
 		Description string `json:"description"`
 	} `json:"embeds"`
 	Replies []string `json:"replies"`
-}
-
-type messageInfo struct {
-	Author  string `json:"author"`
-	Channel string `json:"channel"`
-}
-
-type messageType struct {
-	Type string `json:"type"`
 }
 
 const (
@@ -48,18 +38,13 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 		content = fmt.Sprintf(`{"content":"!dl %s"}`, url)
 	}
 
-	req, err := sesh.AuthenticatedRequest(
-		http.MethodPost,
-		fmt.Sprintf("channels/%s/messages", requestChannelID),
-		strings.NewReader(content),
+	resp, err := sesh.AuthenticatedRequest(
+		requestInfo{
+			method: http.MethodPost,
+			path:   fmt.Sprintf("channels/%s/messages", requestChannelID),
+			body:   strings.NewReader(content),
+		},
 	)
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Add("Idempotency-Key", uuid.NewString())
-
-	resp, err := sesh.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -70,13 +55,14 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 		return "", AuthError(resp)
 	}
 
-	var message Message
+	message := map[string]string{}
+
 	err = util.UnmarshalResponseBody(resp, &message)
 	if err != nil {
 		return "", err
 	}
 
-	return message.ID, nil
+	return message["_id"], nil
 }
 
 func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, error) {
@@ -96,13 +82,17 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	}
 
 	socket.OnTextMessage = func(textMessage string, _ ws.Socket) {
-		var mt messageType
-		err := json.Unmarshal([]byte(textMessage), &mt)
+		message := map[string]string{}
+
+		err := json.Unmarshal([]byte(textMessage), &message)
 		if err != nil {
-			abort(&socket, sesh, err)
+			socket.Close()
+			fmt.Fprintln(os.Stderr, err)
+
+			sesh.Logout()
 		}
 
-		switch mt.Type {
+		switch message["type"] {
 		case "Authenticated":
 			fmt.Print("Authenticated.\nWaiting for a response... ")
 
@@ -113,25 +103,12 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 				}
 			}()
 		case "Message":
-			var mi messageInfo
-			err := json.Unmarshal([]byte(textMessage), &mi)
-			if err != nil {
-				abort(&socket, sesh, err)
-			}
+			mentionsAuthUser := strings.Contains(message["content"], sesh.Authentication.UserID)
 
-			if mi.Channel != uploadsChannelID {
-				break
-			}
-			if mi.Author != botUserID {
-				break
-			}
-
-			err = json.Unmarshal([]byte(textMessage), &message)
-			if err != nil {
-				abort(&socket, sesh, err)
-			}
-
-			if !strings.Contains(message.Content, sesh.Authentication.UserID) {
+			if 
+				message["channel"] != uploadsChannelID ||
+				message["author"] != botUserID || 
+				!mentionsAuthUser {
 				break
 			}
 
@@ -145,13 +122,4 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	fmt.Println("Response received.")
 
 	return message, nil
-}
-
-//nolint:errcheck
-func abort(socket *ws.Socket, sesh *Session, err error) {
-	socket.Close()
-	sesh.Logout()
-
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
 }

@@ -16,16 +16,12 @@ type UserStatus struct {
 const slavArtServerID = "01G96DF05GVMT53VKYH83RMZMN"
 
 func CheckServerStatus(sesh *Session) error {
-	req, err := sesh.AuthenticatedRequest(
-		http.MethodGet,
-		fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.Authentication.UserID),
-		nil,
+	resp, err := sesh.AuthenticatedRequest(
+		requestInfo{
+			method: http.MethodGet,
+			path:   fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.Authentication.UserID),
+		},
 	)
-	if err != nil {
-		return err
-	}
-
-	resp, err := sesh.Client.Do(req)
 	if err != nil {
 		return err
 	}

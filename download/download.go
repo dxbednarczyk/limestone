@@ -9,7 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/google/uuid"
+	"github.com/dchest/uniuri"
 	"github.com/urfave/cli/v2"
 )
 
@@ -35,7 +35,7 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 		return errors.New("status not ok")
 	}
 
-	filename := fmt.Sprintf("%s/%s.zip", path, uuid.NewString())
+	filename := fmt.Sprintf("%s/divolt-%s.zip", path, uniuri.New())
 
 	return DownloadWithProgressBar(resp, filename)
 }

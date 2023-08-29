@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
-	github.com/google/uuid v1.3.0
+	github.com/dchest/uniuri v1.2.0
 	github.com/sacOO7/gowebsocket v0.0.0-20221109081133-70ac927be105
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/term v0.11.0

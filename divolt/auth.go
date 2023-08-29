@@ -35,13 +35,19 @@ type AuthenticationError struct {
 	Error string `json:"type"`
 }
 
-func NewSession(email string, password string, sessionName string) Session {
+type requestInfo struct {
+	method string
+	path   string
+	body   io.Reader
+}
+
+func NewSession(email string, password string) Session {
 	return Session{
 		Client: http.DefaultClient,
 		loginDetails: loginDetails{
 			email,
 			password,
-			sessionName,
+			"Limestone",
 		},
 	}
 }
@@ -60,6 +66,7 @@ func (sesh *Session) Login() error {
 	if err != nil {
 		return errors.New("failed to send login request")
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("failed validation")
 	}
@@ -67,6 +74,7 @@ func (sesh *Session) Login() error {
 	defer resp.Body.Close()
 
 	var ar Authentication
+
 	err = util.UnmarshalResponseBody(resp, &ar)
 	if err != nil {
 		return err
@@ -78,35 +86,23 @@ func (sesh *Session) Login() error {
 }
 
 func (sesh *Session) Logout() {
-	var req *http.Request
-	var resp *http.Response
-
-	req, err := sesh.AuthenticatedRequest(
-		http.MethodPost,
-		"auth/session/logout",
-		nil,
+	resp, err := sesh.AuthenticatedRequest(
+		requestInfo{
+			method: http.MethodPost,
+			path:   "auth/session/logout",
+		},
 	)
 	if err != nil {
-		goto logouterr
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err = sesh.Client.Do(req)
-	if err != nil {
-		goto logouterr
+		fmt.Fprintln(os.Stderr, "failed to logout current session")
+		os.Exit(1)
 	}
 
 	resp.Body.Close()
-	return
-
-logouterr:
-	fmt.Fprintln(os.Stderr, "failed to logout current session")
-	os.Exit(1)
 }
 
 func AuthError(resp *http.Response) error {
 	var autherr AuthenticationError
+
 	err := util.UnmarshalResponseBody(resp, &autherr)
 	if err != nil {
 		return err
@@ -115,11 +111,11 @@ func AuthError(resp *http.Response) error {
 	return errors.New(autherr.Error)
 }
 
-func (sesh *Session) AuthenticatedRequest(method string, path string, body io.Reader) (*http.Request, error) {
+func (sesh *Session) AuthenticatedRequest(info requestInfo) (*http.Response, error) {
 	req, err := http.NewRequest(
-		method,
-		fmt.Sprintf("https://api.divolt.xyz/%s", path),
-		body,
+		info.method,
+		fmt.Sprintf("https://api.divolt.xyz/%s", info.path),
+		info.body,
 	)
 	if err != nil {
 		return nil, err
@@ -127,5 +123,5 @@ func (sesh *Session) AuthenticatedRequest(method string, path string, body io.Re
 
 	req.Header.Add("x-session-token", sesh.Authentication.Token)
 
-	return req, nil
+	return sesh.Client.Do(req)
 }
