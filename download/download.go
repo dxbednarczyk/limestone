@@ -17,7 +17,7 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 	splitDesc := strings.Split(description, "\n")
 	url := strings.TrimSpace(splitDesc[len(splitDesc)-1])
 
-	err := os.Mkdir(path, os.ModePerm)
+	err := os.MkdirAll(path, os.ModePerm)
 	if !os.IsExist(err) {
 		return err
 	}
@@ -84,19 +84,13 @@ func GetDownloadPath(ctx *cli.Context) (string, error) {
 
 	if path == "" {
 		home, err := os.UserHomeDir()
-		if err != nil {
-			goto trywd
+		if err == nil {
+			path = home + "/Downloads"
 		}
-
-		path = home + "/Downloads"
 	}
 
-trywd:
 	if path == "" {
 		path, err = os.Getwd()
-		if err != nil {
-			return "", err
-		}
 	}
 
 	return path, err

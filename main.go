@@ -15,8 +15,6 @@ import (
 
 //nolint:funlen
 func main() {
-	var config util.Config
-
 	app := &cli.App{
 		Name:    "limestone",
 		Version: "0.3.3",
@@ -48,13 +46,15 @@ You can download individual tracks or full albums using Divolt.`,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
+					var config util.Config
 					err := config.GetLoginDetails()
-					if err != nil {
-						return err
-					}
 
 					if os.IsNotExist(err) {
 						return errors.New("please authenticate using `limestone login`")
+					}
+
+					if err != nil {
+						return err
 					}
 
 					err = divolt.Download(ctx, config)
@@ -93,6 +93,10 @@ You can only download individual tracks from Qobuz using the web download method
 						return err
 					}
 
+					if track == nil {
+						return errors.New("no response or result from download request")
+					}
+
 					fmt.Printf("Downloading %s - %s...\n", track.Performer.Name, track.Name)
 
 					err = web.Download(ctx, track)
@@ -129,8 +133,11 @@ You can only download individual tracks from Qobuz using the web download method
 
 					fmt.Println("login successful.")
 
+					var config util.Config
+
 					config.Email = email
 					config.Password = string(passwordBytes)
+
 					err = util.CacheLoginDetails(config)
 					if err != nil {
 						return err
