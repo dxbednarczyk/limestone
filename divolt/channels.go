@@ -15,6 +15,10 @@ import (
 )
 
 type Message struct {
+	Type    string `json:"type"`
+	Channel string `json:"channel"`
+	Author  string `json:"author"`
+
 	ID      string `json:"_id"`
 	Content string `json:"content"`
 	Embeds  []struct {
@@ -55,14 +59,14 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 		return "", AuthError(resp)
 	}
 
-	message := map[string]string{}
+	var message Message
 
 	err = util.UnmarshalResponseBody(resp, &message)
 	if err != nil {
 		return "", err
 	}
 
-	return message["_id"], nil
+	return message.ID, nil
 }
 
 func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, error) {
@@ -82,8 +86,6 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	}
 
 	socket.OnTextMessage = func(textMessage string, _ ws.Socket) {
-		message := map[string]string{}
-
 		err := json.Unmarshal([]byte(textMessage), &message)
 		if err != nil {
 			socket.Close()
@@ -92,9 +94,9 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 			sesh.Logout()
 		}
 
-		switch message["type"] {
+		switch message.Type {
 		case "Authenticated":
-			fmt.Print("Authenticated.\nWaiting for a response... ")
+			fmt.Println("Authenticated. ")
 
 			go func() {
 				for {
@@ -102,11 +104,13 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 					socket.SendText(`{"type":"Ping","data":0}"`)
 				}
 			}()
-		case "Message":
-			mentionsAuthUser := strings.Contains(message["content"], sesh.Authentication.UserID)
 
-			if message["channel"] != uploadsChannelID ||
-				message["author"] != botUserID ||
+			fmt.Print("Waiting for a response... ")
+		case "Message":
+			mentionsAuthUser := strings.Contains(message.Content, sesh.Authentication.UserID)
+
+			if message.Channel != uploadsChannelID ||
+				message.Author != botUserID ||
 				!mentionsAuthUser {
 				break
 			}

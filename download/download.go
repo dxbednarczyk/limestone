@@ -49,13 +49,11 @@ func DownloadFromWeb(ctx *cli.Context, trackID int, performerName, name string) 
 
 func DownloadWithProgressBar(resp *http.Response, path, absoluteFilename string) error {
 	err := os.MkdirAll(path, os.ModePerm)
-	fmt.Println(err)
 	if err != nil {
 		return err
 	}
 
 	dest, err := os.Create(absoluteFilename)
-	fmt.Println(err)
 	if err != nil {
 		return err
 	}
