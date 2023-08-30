@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/dxbednarczyk/limestone/divolt"
+	"github.com/dxbednarczyk/limestone/download"
 	"github.com/dxbednarczyk/limestone/util"
 	"github.com/dxbednarczyk/limestone/web"
 	"github.com/urfave/cli/v2"
@@ -85,7 +86,7 @@ You can only download individual tracks from Qobuz using the web download method
 					return nil
 				},
 				Action: func(ctx *cli.Context) error {
-					fmt.Printf(`Getting results for query "%s"...%s`, ctx.Args().First(), "\n")
+					fmt.Printf("Getting results for query '%s'...\n", ctx.Args().First())
 
 					track, err := web.Query(ctx)
 					if err != nil {
@@ -97,9 +98,7 @@ You can only download individual tracks from Qobuz using the web download method
 						return errors.New("no response or result from download request")
 					}
 
-					fmt.Printf("Downloading %s - %s...\n", track.Performer.Name, track.Name)
-
-					err = web.Download(ctx, track)
+					err = download.DownloadFromWeb(ctx, track.ID, track.Performer.Name, track.Name)
 					if err != nil {
 						return err
 					}

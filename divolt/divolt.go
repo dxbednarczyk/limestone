@@ -38,12 +38,7 @@ func Download(ctx *cli.Context, config util.Config) error {
 		return errors.New("failed to get upload response")
 	}
 
-	path, err := download.GetDownloadPath(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = download.DownloadFromMessage(ctx, message.Embeds[0].Description, path)
+	err = download.DownloadFromMessage(ctx, message.Embeds[0].Description)
 	if err != nil {
 		return errors.New("failed to download bot output")
 	}

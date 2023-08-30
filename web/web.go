@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/dxbednarczyk/limestone/download"
 	"github.com/dxbednarczyk/limestone/util"
 	"github.com/schollz/closestmatch"
 	"github.com/urfave/cli/v2"
@@ -115,24 +114,4 @@ func Query(ctx *cli.Context) (*track, error) {
 	}
 
 	return &choice, nil
-}
-
-func Download(ctx *cli.Context, track *track) error {
-	path, err := download.GetDownloadPath(ctx)
-	if err != nil {
-		return err
-	}
-
-	filename := fmt.Sprintf("%s/%s - %s.flac", path, track.Performer.Name, track.Name)
-
-	resp, err := http.Get(fmt.Sprintf("https://slavart-api.gamesdrive.net/api/download/track?id=%d", track.ID))
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	err = download.DownloadWithProgressBar(resp, filename)
-
-	return err
 }

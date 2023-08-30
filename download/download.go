@@ -1,7 +1,6 @@
 package download
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,16 +12,11 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func DownloadFromMessage(ctx *cli.Context, description string, path string) error {
+func DownloadFromMessage(ctx *cli.Context, description string) error {
+	fmt.Println("Downloading...")
+
 	splitDesc := strings.Split(description, "\n")
 	url := strings.TrimSpace(splitDesc[len(splitDesc)-1])
-
-	err := os.MkdirAll(path, os.ModePerm)
-	if !os.IsExist(err) {
-		return err
-	}
-
-	fmt.Println("Downloading...")
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -31,17 +25,37 @@ func DownloadFromMessage(ctx *cli.Context, description string, path string) erro
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return errors.New("status not ok")
-	}
-
+	path := GetDownloadPath(ctx)
 	filename := fmt.Sprintf("%s/divolt-%s.zip", path, uniuri.New())
 
-	return DownloadWithProgressBar(resp, filename)
+	return DownloadWithProgressBar(resp, path, filename)
 }
 
-func DownloadWithProgressBar(resp *http.Response, filename string) error {
-	dest, err := os.Create(filename)
+func DownloadFromWeb(ctx *cli.Context, trackID int, performerName, name string) error {
+	fmt.Printf("Downloading %s - %s...\n", performerName, name)
+
+	resp, err := http.Get(fmt.Sprintf("https://slavart-api.gamesdrive.net/api/download/track?id=%d", trackID))
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	path := GetDownloadPath(ctx)
+	filename := fmt.Sprintf("%s/%s - %s.flac", path, performerName, name)
+
+	return DownloadWithProgressBar(resp, path, filename)
+}
+
+func DownloadWithProgressBar(resp *http.Response, path, absoluteFilename string) error {
+	err := os.MkdirAll(path, os.ModePerm)
+	fmt.Println(err)
+	if err != nil {
+		return err
+	}
+
+	dest, err := os.Create(absoluteFilename)
+	fmt.Println(err)
 	if err != nil {
 		return err
 	}
@@ -72,14 +86,12 @@ func DownloadWithProgressBar(resp *http.Response, filename string) error {
 		return err
 	}
 
-	fmt.Println("Downloaded to ", filename)
+	fmt.Println("Downloaded to ", absoluteFilename)
 
 	return nil
 }
 
-func GetDownloadPath(ctx *cli.Context) (string, error) {
-	var err error
-
+func GetDownloadPath(ctx *cli.Context) string {
 	path := ctx.Path("dir")
 
 	if path == "" {
@@ -90,8 +102,11 @@ func GetDownloadPath(ctx *cli.Context) (string, error) {
 	}
 
 	if path == "" {
-		path, err = os.Getwd()
+		wd, err := os.Getwd()
+		if err == nil {
+			path = wd
+		}
 	}
 
-	return path, err
+	return path
 }

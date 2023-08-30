@@ -105,9 +105,8 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 		case "Message":
 			mentionsAuthUser := strings.Contains(message["content"], sesh.Authentication.UserID)
 
-			if 
-				message["channel"] != uploadsChannelID ||
-				message["author"] != botUserID || 
+			if message["channel"] != uploadsChannelID ||
+				message["author"] != botUserID ||
 				!mentionsAuthUser {
 				break
 			}
