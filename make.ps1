@@ -10,6 +10,8 @@ switch ($command) {
         go vet
         go mod tidy
         go clean
+
+        golangci-lint run
     }
     default { 
         New-Item -ItemType Directory -Path build -Force

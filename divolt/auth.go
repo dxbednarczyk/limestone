@@ -8,8 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-
-	"github.com/dxbednarczyk/limestone/util"
 )
 
 type Session struct {
@@ -75,7 +73,7 @@ func (sesh *Session) Login() error {
 
 	var ar Authentication
 
-	err = util.UnmarshalResponseBody(resp, &ar)
+	err = json.NewDecoder(resp.Body).Decode(&ar)
 	if err != nil {
 		return err
 	}
@@ -103,9 +101,13 @@ func (sesh *Session) Logout() {
 func AuthError(resp *http.Response) error {
 	var autherr AuthenticationError
 
-	err := util.UnmarshalResponseBody(resp, &autherr)
+	err := json.NewDecoder(resp.Body).Decode(&autherr)
 	if err != nil {
 		return err
+	}
+
+	if autherr.Error == "" {
+		return errors.New("unknown authentication error")
 	}
 
 	return errors.New(autherr.Error)

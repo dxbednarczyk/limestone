@@ -20,3 +20,5 @@ lint:
 	go vet
 	go mod tidy
 	go clean
+	
+	golangci-lint run

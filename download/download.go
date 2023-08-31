@@ -26,7 +26,7 @@ func DownloadFromMessage(ctx *cli.Context, description string) error {
 	defer resp.Body.Close()
 
 	path := GetDownloadPath(ctx)
-	filename := fmt.Sprintf("%s/divolt-%s.zip", path, uniuri.New())
+	filename := fmt.Sprintf("%s/limestone-%s.zip", path, uniuri.New())
 
 	return DownloadWithProgressBar(resp, path, filename)
 }

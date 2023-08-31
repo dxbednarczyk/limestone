@@ -89,13 +89,13 @@ rm -f /home/damian/.local/bin/limestone
 ## Comparison
 |  | `limestone` | `slavartdl` | `slavolt-scraper` |
 |--|--|--|--|
-| STDIN input | ❌ (planned for 0.4) | ✅ | ❌ |
+| STDIN input | ❌ (planned for 0.5) | ✅ | ❌ |
 | CLI | ✅ | ✅  | ❌ |
 | TUI | ✅ | ❌ | ❌ |
 | Website Track API | ✅ | ❌ | ❌ |
 | Unzip downloaded tracks | ❌ | ✅ | ❌ |
 | Credential storage | ✅ | ✅ | ✅ |
-| Session token storage | ❌ (planned for 0.5) | ✅ | ❌ |
+| Session token storage | ❌ (planned for 0.4) | ✅ | ❌ |
 | Self-update | ❌ | ✅ | ❌ |
 
 `limestone` adheres to the [KISS principle](https://en.wikipedia.org/wiki/KISS_principle), to an extent that does not impede on ease of use. However, "features" that *can* be handled by another program, *should* be. 

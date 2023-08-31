@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dxbednarczyk/limestone/util"
 	ws "github.com/sacOO7/gowebsocket"
 	"github.com/urfave/cli/v2"
 )
@@ -61,7 +60,7 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 
 	var message Message
 
-	err = util.UnmarshalResponseBody(resp, &message)
+	err = json.NewDecoder(resp.Body).Decode(&message)
 	if err != nil {
 		return "", err
 	}

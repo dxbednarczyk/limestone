@@ -6,9 +6,9 @@ import (
 	"os"
 	"syscall"
 
+	util "github.com/dxbednarczyk/limestone/config"
 	"github.com/dxbednarczyk/limestone/divolt"
 	"github.com/dxbednarczyk/limestone/download"
-	"github.com/dxbednarczyk/limestone/util"
 	"github.com/dxbednarczyk/limestone/web"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
@@ -18,7 +18,7 @@ import (
 func main() {
 	app := &cli.App{
 		Name:    "limestone",
-		Version: "0.3.3",
+		Version: "0.3.5",
 		Authors: []*cli.Author{
 			{
 				Name:  "Damian Bednarczyk",

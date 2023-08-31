@@ -13,7 +13,7 @@ var (
 
 type model struct {
 	choices list.Model
-	choice  track
+	choice  Track
 }
 
 func (m model) Init() tea.Cmd {
@@ -27,7 +27,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "enter":
-			item, ok := m.choices.SelectedItem().(track)
+			item, ok := m.choices.SelectedItem().(Track)
 			if ok {
 				m.choice = item
 			}
@@ -48,7 +48,7 @@ func (m model) View() string {
 	return docStyle.Render(m.choices.View())
 }
 
-func trackModel(tracks []list.Item) (track, error) {
+func trackModel(tracks []list.Item) (Track, error) {
 	initialModel := model{choices: list.New(tracks, list.NewDefaultDelegate(), 0, 0)}
 
 	prog := tea.NewProgram(initialModel, tea.WithAltScreen())

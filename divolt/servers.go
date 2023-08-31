@@ -1,11 +1,10 @@
 package divolt
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/dxbednarczyk/limestone/util"
 )
 
 type UserStatus struct {
@@ -33,7 +32,7 @@ func CheckServerStatus(sesh *Session) error {
 	}
 
 	var us UserStatus
-	err = util.UnmarshalResponseBody(resp, &us)
+	err = json.NewDecoder(resp.Body).Decode(&us)
 	if err != nil {
 		return err
 	}

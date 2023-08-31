@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/dxbednarczyk/limestone/util"
 	"github.com/schollz/closestmatch"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/maps"
@@ -18,11 +18,11 @@ import (
 
 type searchResponse struct {
 	Tracks struct {
-		Items []track `json:"items"`
+		Items []Track `json:"items"`
 	} `json:"tracks"`
 }
 
-type track struct {
+type Track struct {
 	Name      string `json:"title"`
 	Performer struct {
 		Name string `json:"name"`
@@ -32,7 +32,7 @@ type track struct {
 	ID              int  `json:"id"`
 }
 
-func (t track) Title() string {
+func (t Track) Title() string {
 	var sb strings.Builder
 
 	if t.ParentalWarning {
@@ -44,10 +44,10 @@ func (t track) Title() string {
 	return sb.String()
 }
 
-func (t track) Description() string { return fmt.Sprintf("%s | %s", t.Performer.Name, t.FormatTime()) }
-func (t track) FilterValue() string { return t.Name }
+func (t Track) Description() string { return fmt.Sprintf("%s | %s", t.Performer.Name, t.FormatTime()) }
+func (t Track) FilterValue() string { return t.Name }
 
-func (t *track) FormatTime() string {
+func (t *Track) FormatTime() string {
 	duration := time.Duration(t.Duration) * time.Second
 
 	minutes := math.Floor(duration.Minutes())
@@ -60,7 +60,7 @@ func (t *track) FormatTime() string {
 	return fmt.Sprintf("%.0f minutes, %.0f seconds", minutes, seconds)
 }
 
-func Query(ctx *cli.Context) (*track, error) {
+func Query(ctx *cli.Context) (*Track, error) {
 	query := ctx.Args().First()
 
 	escaped := url.QueryEscape(query)
@@ -72,7 +72,7 @@ func Query(ctx *cli.Context) (*track, error) {
 
 	var searchData searchResponse
 
-	err = util.UnmarshalResponseBody(resp, &searchData)
+	err = json.NewDecoder(resp.Body).Decode(&searchData)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func Query(ctx *cli.Context) (*track, error) {
 	defer resp.Body.Close()
 
 	if ctx.Bool("closest") {
-		tracks := make(map[string]*track)
+		tracks := make(map[string]*Track)
 
 		for i := range searchData.Tracks.Items {
 			track := &searchData.Tracks.Items[i]
