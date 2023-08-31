@@ -1,4 +1,4 @@
-package util
+package config
 
 import (
 	"encoding/json"
@@ -7,8 +7,14 @@ import (
 )
 
 type Config struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string         `json:"email"`
+	Password string         `json:"password"`
+	Auth     Authentication `json:"user_data"`
+}
+
+type Authentication struct {
+	UserID string `json:"user_id"`
+	Token  string `json:"token"`
 }
 
 func CacheLoginDetails(config Config) error {
@@ -25,17 +31,12 @@ func CacheLoginDetails(config Config) error {
 	filePath := configDir + "/limestone/config.json"
 	var dest *os.File
 
-	_, err = os.Stat(filePath)
-	if os.IsNotExist(err) {
-		dest, err = os.Create(filePath)
-		if err != nil {
-			return err
-		}
-
-		defer dest.Close()
-	} else {
+	dest, err = os.Create(filePath)
+	if err != nil {
 		return err
 	}
+
+	defer dest.Close()
 
 	encoded, err := json.Marshal(config)
 	if err != nil {
@@ -55,26 +56,39 @@ func CacheLoginDetails(config Config) error {
 	return nil
 }
 
-func (config *Config) GetLoginDetails() error {
+func GetLoginDetails() (Config, error) {
+	var config Config
+
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return Config{}, err
+	}
+
+	path := dir + "/limestone/config.json"
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return Config{}, err
+	}
+
+	err = json.Unmarshal(content, &config)
+	if err != nil {
+		return Config{}, err
+	}
+
+	if config.Email == "" || config.Password == "" {
+		return Config{}, errors.New("email or password is empty")
+	}
+
+	return config, nil
+}
+
+func RemoveConfigDetails() error {
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		return err
 	}
 
 	path := dir + "/limestone/config.json"
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
 
-	err = json.Unmarshal(content, &config)
-	if err != nil {
-		return err
-	}
-
-	if config.Email == "" || config.Password == "" {
-		return errors.New("email or password is empty")
-	}
-
-	return nil
+	return os.Remove(path)
 }

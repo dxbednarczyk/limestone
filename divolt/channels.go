@@ -78,7 +78,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 	defer socket.Close()
 
 	socket.OnConnected = func(_ ws.Socket) {
-		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Authentication.Token)
+		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Config.Auth.Token)
 		socket.SendText(json)
 
 		fmt.Print("Waiting for authentication... ")
@@ -89,8 +89,6 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 		if err != nil {
 			socket.Close()
 			fmt.Fprintln(os.Stderr, err)
-
-			sesh.Logout()
 		}
 
 		switch message.Type {
@@ -106,7 +104,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 
 			fmt.Print("Waiting for a response... ")
 		case "Message":
-			mentionsAuthUser := strings.Contains(message.Content, sesh.Authentication.UserID)
+			mentionsAuthUser := strings.Contains(message.Content, sesh.Config.Auth.UserID)
 
 			if message.Channel != uploadsChannelID ||
 				message.Author != botUserID ||

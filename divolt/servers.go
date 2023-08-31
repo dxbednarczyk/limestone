@@ -18,7 +18,7 @@ func CheckServerStatus(sesh *Session) error {
 	resp, err := sesh.AuthenticatedRequest(
 		requestInfo{
 			method: http.MethodGet,
-			path:   fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.Authentication.UserID),
+			path:   fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.Config.Auth.UserID),
 		},
 	)
 	if err != nil {

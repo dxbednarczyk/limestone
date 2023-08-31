@@ -6,7 +6,7 @@ import (
 	"os"
 	"syscall"
 
-	util "github.com/dxbednarczyk/limestone/config"
+	"github.com/dxbednarczyk/limestone/config"
 	"github.com/dxbednarczyk/limestone/divolt"
 	"github.com/dxbednarczyk/limestone/download"
 	"github.com/dxbednarczyk/limestone/web"
@@ -18,7 +18,7 @@ import (
 func main() {
 	app := &cli.App{
 		Name:    "limestone",
-		Version: "0.3.5",
+		Version: "0.4.0",
 		Authors: []*cli.Author{
 			{
 				Name:  "Damian Bednarczyk",
@@ -47,8 +47,7 @@ You can download individual tracks or full albums using Divolt.`,
 					},
 				},
 				Action: func(ctx *cli.Context) error {
-					var config util.Config
-					err := config.GetLoginDetails()
+					cfg, err := config.GetLoginDetails()
 
 					if os.IsNotExist(err) {
 						return errors.New("please authenticate using `limestone login`")
@@ -58,7 +57,7 @@ You can download individual tracks or full albums using Divolt.`,
 						return err
 					}
 
-					err = divolt.Download(ctx, config)
+					err = divolt.Download(ctx, &cfg)
 					if err != nil {
 						return err
 					}
@@ -123,7 +122,12 @@ You can only download individual tracks from Qobuz using the web download method
 
 					fmt.Print("\nLogging in... ")
 
-					session := divolt.NewSession(email, string(passwordBytes))
+					cfg := config.Config{
+						Email:    email,
+						Password: string(passwordBytes),
+					}
+
+					session := divolt.NewSession(&cfg)
 					err = session.Login()
 					if err != nil {
 						fmt.Println()
@@ -132,19 +136,41 @@ You can only download individual tracks from Qobuz using the web download method
 
 					fmt.Println("login successful.")
 
-					var config util.Config
-
-					config.Email = email
-					config.Password = string(passwordBytes)
-
-					err = util.CacheLoginDetails(config)
+					err = config.CacheLoginDetails(cfg)
 					if err != nil {
 						return err
 					}
 
 					fmt.Println("Login details cached.")
 
-					session.Logout()
+					return nil
+				},
+			},
+			{
+				Name:      "logout",
+				UsageText: "limestone logout",
+				Action: func(ctx *cli.Context) error {
+					fmt.Print("Logging out... ")
+
+					cfg, err := config.GetLoginDetails()
+					if err != nil {
+						return err
+					}
+
+					// naming seems counterintuitive, but we obviously need
+					// to authenticate before we can deauthenticate
+					session := divolt.NewSession(&cfg)
+					err = session.Logout()
+					if err != nil {
+						return err
+					}
+
+					err = config.RemoveConfigDetails()
+					if err != nil {
+						return err
+					}
+
+					fmt.Println("logged out successfully.")
 
 					return nil
 				},

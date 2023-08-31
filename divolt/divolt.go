@@ -2,27 +2,44 @@ package divolt
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
-	util "github.com/dxbednarczyk/limestone/config"
+	"github.com/dxbednarczyk/limestone/config"
 	"github.com/dxbednarczyk/limestone/download"
 	"github.com/urfave/cli/v2"
 )
 
-func Download(ctx *cli.Context, config util.Config) error {
+func Download(ctx *cli.Context, cfg *config.Config) error {
 	validated, err := validateURL(ctx.Args().First())
 	if err != nil {
 		return errors.New("invalid url provided")
 	}
 
-	session := NewSession(config.Email, config.Password)
-	err = session.Login()
+	session := NewSession(cfg)
 
-	defer session.Logout()
+	if cfg.Auth.Token != "" {
+		fmt.Print("Trying existing session token... ")
 
-	if err != nil {
-		return errors.New("failed to login")
+		resp, err := session.AuthenticatedRequest(
+			requestInfo{
+				method: http.MethodGet,
+				path:   "/users/@me",
+			},
+		)
+		if err != nil || AuthError(resp) != nil {
+			fmt.Println("token is invalid.")
+			fmt.Println("Creating new session...")
+
+			err := session.Login()
+			if err != nil {
+				return errors.New("failed to login")
+			}
+		} else {
+			fmt.Println()
+		}
 	}
 
 	err = CheckServerStatus(&session)

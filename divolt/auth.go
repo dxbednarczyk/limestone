@@ -7,26 +7,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+
+	"github.com/dxbednarczyk/limestone/config"
 )
 
 type Session struct {
-	Client         *http.Client
-	Authentication *Authentication
-	loginDetails   loginDetails
-}
-
-type Authentication struct {
-	ID          string `json:"_id"`
-	UserID      string `json:"user_id"`
-	Token       string `json:"token"`
-	DisplayName string `json:"name"`
-}
-
-type loginDetails struct {
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-	SessionName string `json:"friendly_name"`
+	Client *http.Client
+	Config *config.Config
 }
 
 type AuthenticationError struct {
@@ -39,19 +26,15 @@ type requestInfo struct {
 	body   io.Reader
 }
 
-func NewSession(email string, password string) Session {
+func NewSession(cfg *config.Config) Session {
 	return Session{
 		Client: http.DefaultClient,
-		loginDetails: loginDetails{
-			email,
-			password,
-			"Limestone",
-		},
+		Config: cfg,
 	}
 }
 
 func (sesh *Session) Login() error {
-	body, err := json.Marshal(sesh.loginDetails)
+	body, err := json.Marshal(sesh.Config)
 	if err != nil {
 		return err
 	}
@@ -71,19 +54,19 @@ func (sesh *Session) Login() error {
 
 	defer resp.Body.Close()
 
-	var ar Authentication
+	var ar config.Authentication
 
 	err = json.NewDecoder(resp.Body).Decode(&ar)
 	if err != nil {
 		return err
 	}
 
-	sesh.Authentication = &ar
+	sesh.Config.Auth = ar
 
 	return nil
 }
 
-func (sesh *Session) Logout() {
+func (sesh *Session) Logout() error {
 	resp, err := sesh.AuthenticatedRequest(
 		requestInfo{
 			method: http.MethodPost,
@@ -91,11 +74,10 @@ func (sesh *Session) Logout() {
 		},
 	)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "failed to logout current session")
-		os.Exit(1)
+		return err
 	}
 
-	resp.Body.Close()
+	return resp.Body.Close()
 }
 
 func AuthError(resp *http.Response) error {
@@ -107,7 +89,7 @@ func AuthError(resp *http.Response) error {
 	}
 
 	if autherr.Error == "" {
-		return errors.New("unknown authentication error")
+		return nil
 	}
 
 	return errors.New(autherr.Error)
@@ -123,7 +105,7 @@ func (sesh *Session) AuthenticatedRequest(info requestInfo) (*http.Response, err
 		return nil, err
 	}
 
-	req.Header.Add("x-session-token", sesh.Authentication.Token)
+	req.Header.Add("x-session-token", sesh.Config.Auth.Token)
 
 	return sesh.Client.Do(req)
 }
