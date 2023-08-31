@@ -89,7 +89,7 @@ rm -f /home/damian/.local/bin/limestone
 ## Comparison
 |  | `limestone` | `slavartdl` | `slavolt-scraper` |
 |--|--|--|--|
-| STDIN input | ❌ (planned for 0.5) | ✅ | ❌ |
+| STDIN input | ❌ | ✅ | ❌ |
 | CLI | ✅ | ✅  | ❌ |
 | TUI | ✅ | ❌ | ❌ |
 | Website Track API | ✅ | ❌ | ❌ |
