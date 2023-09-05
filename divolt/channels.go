@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	ws "github.com/sacOO7/gowebsocket"
+	ws "github.com/dxbednarczyk/gowebsocket"
 	"github.com/urfave/cli/v2"
 )
 
