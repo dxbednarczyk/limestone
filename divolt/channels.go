@@ -1,15 +1,15 @@
 package divolt
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
-	"sync"
 	"time"
 
-	ws "github.com/dxbednarczyk/gowebsocket"
+	"github.com/recws-org/recws"
 	"github.com/urfave/cli/v2"
 )
 
@@ -30,6 +30,7 @@ const (
 	requestChannelID = "01G9AZ9AMWDV227YA7FQ5RV8WB"
 	uploadsChannelID = "01G9AZ9Q2R5VEGVPQ4H99C01YP"
 	botUserID        = "01G9824MQPGD7GVYR0F6A6GJ2Q"
+	textMessage      = 1
 )
 
 func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error) {
@@ -69,57 +70,72 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 }
 
 func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, error) {
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
+	c, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ws := recws.RecConn{
+		NonVerbose:       true,
+		KeepAliveTimeout: 10 * time.Second,
+	}
+
+	ws.Dial("wss://ws.divolt.xyz", http.Header{})
+
+	for start := time.Now(); ; {
+		if ws.IsConnected() {
+			break
+		}
+
+		if time.Since(start) > 10*time.Second {
+			return Message{}, errors.New("dialing websocket timed out")
+		}
+	}
+
+	authPayload := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Config.Auth.Token)
+	err := ws.WriteMessage(textMessage, []byte(authPayload))
+
+	fmt.Print("Waiting for authentication... ")
+
+	if err != nil {
+		return Message{}, err
+	}
 
 	var message Message
+	var done bool
 
-	socket := ws.New("wss://ws.divolt.xyz")
-	defer socket.Close()
-
-	socket.OnConnected = func(_ ws.Socket) {
-		json := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Config.Auth.Token)
-		socket.SendText(json)
-
-		fmt.Print("Waiting for authentication... ")
-	}
-
-	socket.OnTextMessage = func(textMessage string, _ ws.Socket) {
-		err := json.Unmarshal([]byte(textMessage), &message)
-		if err != nil {
-			socket.Close()
-			fmt.Fprintln(os.Stderr, err)
-		}
-
-		switch message.Type {
-		case "Authenticated":
-			fmt.Println("Authenticated. ")
-
-			go func() {
-				for {
-					time.Sleep(10 * time.Second)
-					socket.SendText(`{"type":"Ping","data":0}"`)
-				}
-			}()
-
-			fmt.Print("Waiting for a response... ")
-		case "Message":
-			mentionsAuthUser := strings.Contains(message.Content, sesh.Config.Auth.UserID)
-
-			if message.Channel != uploadsChannelID ||
-				message.Author != botUserID ||
-				!mentionsAuthUser {
-				break
+	for !done {
+		select {
+		case <-c.Done():
+			done = true
+			go ws.Close()
+		default:
+			_, msg, err := ws.ReadMessage()
+			if err != nil {
+				return Message{}, err
 			}
 
-			wg.Done()
+			err = json.Unmarshal([]byte(msg), &message)
+			if err != nil {
+				return Message{}, err
+			}
+
+			switch message.Type {
+			case "Authenticated":
+				fmt.Println("Authenticated.")
+				fmt.Print("Waiting for a response... ")
+			case "Message":
+				mentionsAuthUser := strings.Contains(message.Content, sesh.Config.Auth.UserID)
+
+				if message.Channel != uploadsChannelID ||
+					message.Author != botUserID ||
+					!mentionsAuthUser {
+					break
+				}
+
+				cancel()
+			}
 		}
 	}
 
-	socket.Connect()
-	wg.Wait()
-
 	fmt.Println("Response received.")
-
 	return message, nil
 }
