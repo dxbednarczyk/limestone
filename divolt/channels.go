@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -132,6 +134,21 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 				}
 
 				cancel()
+			case "MessageUpdate":
+				containsRequestMessage := slices.Contains(message.Replies, sentId)
+
+				if message.Channel != requestChannelID ||
+					message.Author != botUserID ||
+					!containsRequestMessage {
+					break
+				}
+
+				lowercaseMessage := strings.ToLower(message.Content)
+
+				if strings.Contains(lowercaseMessage, "error") {
+					fmt.Fprintln(os.Stderr, message.Content)
+					os.Exit(1)
+				}
 			}
 		}
 	}
