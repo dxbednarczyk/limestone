@@ -54,7 +54,7 @@ You can download individual tracks or full albums using Divolt.`,
 					path:   "/users/@me",
 				},
 			)
-			if err != nil || AuthError(resp) != nil {
+			if err != nil || 400 <= resp.StatusCode {
 				fmt.Println("token is invalid.")
 				fmt.Println("Creating new session...")
 
@@ -62,8 +62,10 @@ You can download individual tracks or full albums using Divolt.`,
 				if err != nil {
 					return errors.New("failed to login")
 				}
+
+				config.CacheLoginDetails(session.Config)
 			} else {
-				fmt.Println()
+				fmt.Println("token is valid.")
 			}
 		}
 

@@ -17,7 +17,7 @@ type Authentication struct {
 	Token  string `json:"token"`
 }
 
-func CacheLoginDetails(config Config) error {
+func CacheLoginDetails(config *Config) error {
 	configDir, err := os.UserConfigDir()
 	if err != nil {
 		return err

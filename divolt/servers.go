@@ -27,8 +27,8 @@ func CheckServerStatus(sesh *Session) error {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return AuthError(resp)
+	if resp.StatusCode >= 400 {
+		return errors.New("authenticated response failed")
 	}
 
 	var us UserStatus

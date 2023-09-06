@@ -57,8 +57,8 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", AuthError(resp)
+	if resp.StatusCode >= 400 {
+		return "", errors.New("invalid authentication")
 	}
 
 	var message Message
@@ -149,6 +149,8 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 					fmt.Fprintln(os.Stderr, message.Content)
 					os.Exit(1)
 				}
+
+				fmt.Println(message.Content)
 			}
 		}
 	}

@@ -56,7 +56,7 @@ var Login = cli.Command{
 
 		fmt.Println("login successful.")
 
-		err = config.CacheLoginDetails(cfg)
+		err = config.CacheLoginDetails(&cfg)
 		if err != nil {
 			return err
 		}
@@ -149,21 +149,6 @@ func (sesh *Session) Logout() error {
 	}
 
 	return resp.Body.Close()
-}
-
-func AuthError(resp *http.Response) error {
-	autherr := map[string]string{}
-
-	err := json.NewDecoder(resp.Body).Decode(&autherr)
-	if err != nil {
-		return err
-	}
-
-	if autherr["type"] == "" {
-		return nil
-	}
-
-	return errors.New(autherr["type"])
 }
 
 func (sesh *Session) AuthenticatedRequest(info requestInfo) (*http.Response, error) {
