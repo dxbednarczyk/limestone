@@ -62,7 +62,7 @@ $ make
 ```
 
 ### Windows
-Install Go using `winget`, or alternatively download the latest MSI package from [go.dev/dl](https://go.dev/dl/). Preferably, use Powershell 7 or higher.
+Install Go using `winget`, or alternatively download the latest MSI package from [the download page](https://go.dev/dl/). Preferably, use Powershell 7 or higher.
 
 ```powershell
 > git clone https://github.com/dxbednarczyk/limestone
@@ -98,6 +98,4 @@ rm -f /home/damian/.local/bin/limestone
 | Session token storage | ✅ | ✅ | ❌ |
 | Self-update | ❌ | ✅ | ❌ |
 
-`limestone` adheres to the [KISS principle](https://en.wikipedia.org/wiki/KISS_principle), to an extent that does not impede on ease of use. However, "features" that *can* be handled by another program, *should* be. 
-
-`limestone` overall supports all Slav Art download methods, [uses websockets](https://github.com/dxbednarczyk/limestone/blob/1b173b920bea81c9ff565f4d05ee9a407793bb79/divolt/channels.go#L74) instead of [large](https://github.com/D0otDo0t/slavolt-scraper/blob/d189ae68241144cd74e40cad13a3f84279361265/slavolt_scraper.py#L75) [REST](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L93) [payloads](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L113), and strictly adheres to the [Revolt spec](https://developers.revolt.chat/).
+`limestone` supports all Slav Art download methods, and [uses websockets](https://github.com/dxbednarczyk/limestone/blob/5197cefed4332c09a675c42511ba9a632f3c4891/divolt/channels.go#L76) instead of [large](https://github.com/D0otDo0t/slavolt-scraper/blob/d189ae68241144cd74e40cad13a3f84279361265/slavolt_scraper.py#L75) [REST](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L93) [payloads](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L113).
