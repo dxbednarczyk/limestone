@@ -18,3 +18,5 @@ go.sum
 # build directories
 build/
 dist/
+
+.idea/

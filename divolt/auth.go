@@ -35,7 +35,7 @@ var Login = cli.Command{
 		}
 
 		fmt.Printf("Enter the password for %s: ", email)
-		passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+		passwordBytes, err := term.ReadPassword(syscall.Stdin)
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ var Logout = cli.Command{
 		}
 
 		// naming seems counterintuitive, but we obviously need
-		// to authenticate before we can deauthenticate
+		// to authenticate before we can de-authenticate
 		session := NewSession(&cfg)
 		err = session.Logout()
 		if err != nil {

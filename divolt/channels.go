@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/recws-org/recws"
-	"github.com/urfave/cli/v2"
 )
 
 type Message struct {
@@ -71,7 +70,7 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 	return message.ID, nil
 }
 
-func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, error) {
+func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
 	c, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -115,7 +114,7 @@ func GetUploadMessage(ctx *cli.Context, sesh *Session, sentId string) (Message, 
 				return Message{}, err
 			}
 
-			err = json.Unmarshal([]byte(msg), &message)
+			err = json.Unmarshal(msg, &message)
 			if err != nil {
 				return Message{}, err
 			}

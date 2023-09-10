@@ -51,9 +51,9 @@ func (m model) View() string {
 func trackModel(tracks []list.Item) (Track, error) {
 	initialModel := model{choices: list.New(tracks, list.NewDefaultDelegate(), 0, 0)}
 
-	prog := tea.NewProgram(initialModel, tea.WithAltScreen())
+	p := tea.NewProgram(initialModel, tea.WithAltScreen())
 
-	returnedModel, err := prog.Run()
+	returnedModel, err := p.Run()
 
 	return returnedModel.(model).choice, err
 }

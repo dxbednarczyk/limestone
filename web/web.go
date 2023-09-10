@@ -49,7 +49,7 @@ You can only download individual tracks from Qobuz using the web download method
 			return errors.New("no response or result from download request")
 		}
 
-		err = download.DownloadFromWeb(ctx, track.ID, track.Performer.Name, track.Name)
+		err = download.FromWeb(ctx, track.ID, track.Performer.Name, track.Name)
 		if err != nil {
 			return err
 		}

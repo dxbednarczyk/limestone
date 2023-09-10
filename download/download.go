@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func DownloadFromMessage(ctx *cli.Context, description string) error {
+func FromMessage(ctx *cli.Context, description string) error {
 	fmt.Println("Downloading...")
 
 	splitDesc := strings.Split(description, "\n")
@@ -28,10 +28,10 @@ func DownloadFromMessage(ctx *cli.Context, description string) error {
 	path := GetDownloadPath(ctx)
 	filename := fmt.Sprintf("%s/limestone-%s.zip", path, uniuri.New())
 
-	return DownloadWithProgressBar(resp, path, filename)
+	return WithProgressBar(resp, path, filename)
 }
 
-func DownloadFromWeb(ctx *cli.Context, trackID int, performerName, name string) error {
+func FromWeb(ctx *cli.Context, trackID int, performerName, name string) error {
 	fmt.Printf("Downloading %s - %s...\n", performerName, name)
 
 	resp, err := http.Get(fmt.Sprintf("https://slavart-api.gamesdrive.net/api/download/track?id=%d", trackID))
@@ -44,10 +44,10 @@ func DownloadFromWeb(ctx *cli.Context, trackID int, performerName, name string) 
 	path := GetDownloadPath(ctx)
 	filename := fmt.Sprintf("%s/%s - %s.flac", path, performerName, name)
 
-	return DownloadWithProgressBar(resp, path, filename)
+	return WithProgressBar(resp, path, filename)
 }
 
-func DownloadWithProgressBar(resp *http.Response, path, absoluteFilename string) error {
+func WithProgressBar(resp *http.Response, path, absoluteFilename string) error {
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err

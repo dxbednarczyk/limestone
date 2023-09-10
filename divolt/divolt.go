@@ -79,12 +79,12 @@ You can download individual tracks or full albums using Divolt.`,
 			return errors.New("failed to send download request")
 		}
 
-		message, err := GetUploadMessage(ctx, &session, id)
+		message, err := GetUploadMessage(&session, id)
 		if err != nil {
 			return errors.New("failed to get upload response")
 		}
 
-		err = download.DownloadFromMessage(ctx, message.Embeds[0].Description)
+		err = download.FromMessage(ctx, message.Embeds[0].Description)
 		if err != nil {
 			return errors.New("failed to download bot output")
 		}

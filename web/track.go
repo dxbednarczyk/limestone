@@ -32,7 +32,7 @@ func (t Track) Title() string {
 func (t Track) Description() string { return fmt.Sprintf("%s | %s", t.Performer.Name, t.FormatTime()) }
 func (t Track) FilterValue() string { return t.Name }
 
-func (t *Track) FormatTime() string {
+func (t Track) FormatTime() string {
 	duration := time.Duration(t.Duration) * time.Second
 
 	minutes := math.Floor(duration.Minutes())
