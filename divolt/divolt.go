@@ -75,7 +75,7 @@ You can download individual tracks or full albums using Divolt.`,
 					return errors.New("failed to login")
 				}
 
-				config.CacheLoginDetails(session.Config)
+				session.Config.CacheLoginDetails()
 			} else {
 				fmt.Println("token is valid.")
 			}
@@ -136,7 +136,7 @@ var Login = cli.Command{
 
 		fmt.Println("login successful.")
 
-		err = config.CacheLoginDetails(&cfg)
+		err = cfg.CacheLoginDetails()
 		if err != nil {
 			return err
 		}
@@ -158,7 +158,7 @@ var Logout = cli.Command{
 			return err
 		}
 
-		// naming seems counterintuitive, but we obviously need
+		// naming seems counterintuitive, but we need
 		// to authenticate before we can de-authenticate
 		session := NewSession(&cfg)
 		err = session.Logout()
@@ -203,8 +203,6 @@ func formatURL(u string) (string, error) {
 	queries.Del("utm_campaign")
 	queries.Del("utm_source")
 	queries.Del("utm_medium")
-
-	parsed.RawQuery = queries.Encode()
 
 	return parsed.String(), nil
 }
