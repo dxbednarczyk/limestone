@@ -7,11 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"syscall"
 
 	"github.com/dxbednarczyk/limestone/config"
-	"github.com/urfave/cli/v2"
-	"golang.org/x/term"
 )
 
 type Session struct {
@@ -23,78 +20,6 @@ type requestInfo struct {
 	method string
 	path   string
 	body   io.Reader
-}
-
-var Login = cli.Command{
-	Name:      "login",
-	UsageText: "limestone login <email>",
-	Action: func(ctx *cli.Context) error {
-		email := ctx.Args().First()
-		if email == "" {
-			return errors.New("no email specified")
-		}
-
-		fmt.Printf("Enter the password for %s: ", email)
-		passwordBytes, err := term.ReadPassword(syscall.Stdin)
-		if err != nil {
-			return err
-		}
-
-		fmt.Print("\nLogging in... ")
-
-		cfg := config.Config{
-			Email:    email,
-			Password: string(passwordBytes),
-		}
-
-		session := NewSession(&cfg)
-		err = session.Login()
-		if err != nil {
-			fmt.Println()
-			return err
-		}
-
-		fmt.Println("login successful.")
-
-		err = config.CacheLoginDetails(&cfg)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("Login details cached.")
-
-		return nil
-	},
-}
-
-var Logout = cli.Command{
-	Name:      "logout",
-	UsageText: "limestone logout",
-	Action: func(ctx *cli.Context) error {
-		fmt.Print("Logging out... ")
-
-		cfg, err := config.GetLoginDetails()
-		if err != nil {
-			return err
-		}
-
-		// naming seems counterintuitive, but we obviously need
-		// to authenticate before we can de-authenticate
-		session := NewSession(&cfg)
-		err = session.Logout()
-		if err != nil {
-			return err
-		}
-
-		err = config.RemoveConfigDetails()
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("logged out successfully.")
-
-		return nil
-	},
 }
 
 func NewSession(cfg *config.Config) Session {

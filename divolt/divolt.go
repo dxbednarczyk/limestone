@@ -7,11 +7,23 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/dxbednarczyk/limestone/config"
 	"github.com/dxbednarczyk/limestone/download"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/term"
 )
+
+var allowedUrls []string = []string{
+	"qobuz.com",
+	"deezer.com",
+	"tidal.com",
+	"soundcloud.com",
+	"open.spotify.com",
+	"music.youtube.com",
+	"music.apple.com",
+}
 
 var Divolt = cli.Command{
 	Name: "divolt",
@@ -38,7 +50,7 @@ You can download individual tracks or full albums using Divolt.`,
 			return err
 		}
 
-		validated, err := validateURL(ctx.Args().First())
+		formatted, err := formatURL(ctx.Args().First())
 		if err != nil {
 			return errors.New("invalid url provided")
 		}
@@ -74,7 +86,7 @@ You can download individual tracks or full albums using Divolt.`,
 			return errors.New("invalid server status")
 		}
 
-		id, err := SendDownloadMessage(&session, validated, ctx.Uint("quality"))
+		id, err := SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
 		if err != nil {
 			return errors.New("failed to send download request")
 		}
@@ -93,20 +105,82 @@ You can download individual tracks or full albums using Divolt.`,
 	},
 }
 
-func validateURL(u string) (string, error) {
-	urls := []string{
-		"qobuz.com",
-		"deezer.com",
-		"tidal.com",
-		"soundcloud.com",
-		"open.spotify.com",
-		"music.youtube.com",
-		"music.apple.com",
-	}
+var Login = cli.Command{
+	Name:      "login",
+	UsageText: "limestone login <email>",
+	Action: func(ctx *cli.Context) error {
+		email := ctx.Args().First()
+		if email == "" {
+			return errors.New("no email specified")
+		}
 
+		fmt.Printf("Enter the password for %s: ", email)
+		passwordBytes, err := term.ReadPassword(syscall.Stdin)
+		if err != nil {
+			return err
+		}
+
+		fmt.Print("\nLogging in... ")
+
+		cfg := config.Config{
+			Email:    email,
+			Password: string(passwordBytes),
+		}
+
+		session := NewSession(&cfg)
+		err = session.Login()
+		if err != nil {
+			fmt.Println()
+			return err
+		}
+
+		fmt.Println("login successful.")
+
+		err = config.CacheLoginDetails(&cfg)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Login details cached.")
+
+		return nil
+	},
+}
+
+var Logout = cli.Command{
+	Name:      "logout",
+	UsageText: "limestone logout",
+	Action: func(ctx *cli.Context) error {
+		fmt.Print("Logging out... ")
+
+		cfg, err := config.GetLoginDetails()
+		if err != nil {
+			return err
+		}
+
+		// naming seems counterintuitive, but we obviously need
+		// to authenticate before we can de-authenticate
+		session := NewSession(&cfg)
+		err = session.Logout()
+		if err != nil {
+			return err
+		}
+
+		err = config.RemoveConfigDetails()
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("logged out successfully.")
+
+		return nil
+	},
+}
+
+func formatURL(u string) (string, error) {
 	var contains bool
 
-	for _, p := range urls {
+	for _, p := range allowedUrls {
 		if strings.Contains(u, p) {
 			contains = true
 			break
