@@ -9,8 +9,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/dxbednarczyk/limestone/download"
-	"github.com/schollz/closestmatch"
 	"github.com/urfave/cli/v2"
+	"github.com/xrash/smetrics"
 	"golang.org/x/exp/maps"
 )
 
@@ -32,14 +32,11 @@ You can only download individual tracks from Qobuz using the web download method
 			Usage:   "download the closest match to the query",
 		},
 	},
-	Before: func(ctx *cli.Context) error {
+	Action: func(ctx *cli.Context) error {
 		if ctx.Args().First() == "" {
 			return errors.New("you must provide a query")
 		}
 
-		return nil
-	},
-	Action: func(ctx *cli.Context) error {
 		track, err := Query(ctx)
 		if err != nil {
 			return err
@@ -80,7 +77,7 @@ func Query(ctx *cli.Context) (*Track, error) {
 	defer resp.Body.Close()
 
 	if ctx.Bool("closest") {
-		tracks := make(map[string]*Track)
+		tracks := map[string]*Track{}
 
 		for i := range searchData.Tracks.Items {
 			track := &searchData.Tracks.Items[i]
@@ -90,12 +87,20 @@ func Query(ctx *cli.Context) (*Track, error) {
 			tracks[desc] = track
 		}
 
-		bagSizes := []int{2, 3}
-		cm := closestmatch.New(maps.Keys(tracks), bagSizes)
+		keys := maps.Keys(tracks)
 
-		closest := cm.Closest(query)
+		lowest := 0.0
+		var closestKey string
 
-		return tracks[closest], nil
+		for _, key := range keys {
+			distance := smetrics.Jaro(key, query)
+
+			if distance > lowest {
+				closestKey = key
+			}
+		}
+
+		return tracks[closestKey], nil
 	}
 
 	// this is extremely stupid.
