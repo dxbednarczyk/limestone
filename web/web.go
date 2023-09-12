@@ -9,8 +9,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/dxbednarczyk/limestone/download"
+	"github.com/schollz/closestmatch"
 	"github.com/urfave/cli/v2"
-	"github.com/xrash/smetrics"
 	"golang.org/x/exp/maps"
 )
 
@@ -109,19 +109,11 @@ func getClosestMatch(searchData *searchResponse, query string) (*Track, error) {
 		tracks[desc] = track
 	}
 
-	keys := maps.Keys(tracks)
+	bagSizes := []int{2, 3}
 
-	var closestKey string
+	match := closestmatch.New(maps.Keys(tracks), bagSizes)
 
-	lowest := 0.0
-
-	for _, key := range keys {
-		distance := smetrics.Jaro(key, query)
-
-		if distance > lowest {
-			closestKey = key
-		}
-	}
+	closestKey := match.Closest(query)
 
 	return tracks[closestKey], nil
 }
