@@ -11,7 +11,7 @@ switch ($command) {
         go mod tidy
         go clean
 
-        golangci-lint run
+        golangci-lint run -c .golangci-lint.yaml
     }
     default { 
         New-Item -ItemType Directory -Path build -Force

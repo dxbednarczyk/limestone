@@ -12,7 +12,7 @@ All commands have help/usage information available, just pass `--help` or `-h` a
 You can use `limestone` to download zipped albums/tracks from the Slav Art server, provided you have an account on [Divolt](https://divolt.xyz). `limestone` does not currently support multi-factor authentication.
 
 ```bash
-$ limestone login bob@example.com
+$ limestone login bob@bob.com
 Enter the password for bob@bob.com:
 Logging in... login successful.
 $ limestone divolt <url>
@@ -73,7 +73,13 @@ Install Go using `winget`, or alternatively download the latest MSI package from
 
 ## Installing
 
-### Unix
+### Using `go install`
+
+```bash
+$ go install github.com/dxbednarczyk/limestone@latest
+```
+
+### Using `make`
 
 Installs to `~/.local/bin` by default, make sure this directory is somewhere on your PATH.
 
@@ -98,4 +104,4 @@ rm -f /home/damian/.local/bin/limestone
 | Session token storage | ✅ | ✅ | ❌ |
 | Self-update | ❌ | ✅ | ❌ |
 
-`limestone` supports all Slav Art download methods, and [uses websockets](https://github.com/dxbednarczyk/limestone/blob/5197cefed4332c09a675c42511ba9a632f3c4891/divolt/channels.go#L76) instead of [large](https://github.com/D0otDo0t/slavolt-scraper/blob/d189ae68241144cd74e40cad13a3f84279361265/slavolt_scraper.py#L75) [REST](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L93) [payloads](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L113).
+`limestone` supports both Slav Art download methods, and [uses websockets](https://github.com/dxbednarczyk/limestone/blob/5197cefed4332c09a675c42511ba9a632f3c4891/divolt/channels.go#L76) instead of [large](https://github.com/D0otDo0t/slavolt-scraper/blob/d189ae68241144cd74e40cad13a3f84279361265/slavolt_scraper.py#L75) [REST](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L93) [payloads](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L113).

@@ -75,12 +75,12 @@ You can download individual tracks or full albums using Divolt.`,
 
 		err = CheckServerStatus(&session)
 		if err != nil {
-			return errors.New("invalid server status")
+			return err
 		}
 
 		id, err := SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
 		if err != nil {
-			return errors.New("failed to send download request")
+			return err
 		}
 
 		message, err := GetUploadMessage(&session, id)

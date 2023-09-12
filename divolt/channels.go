@@ -56,8 +56,8 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
-		return "", errors.New("invalid authentication")
+	if resp.StatusCode >= http.StatusBadRequest {
+		return "", errors.New("invalid authentication, is the channel locked?")
 	}
 
 	var message Message
