@@ -12,7 +12,7 @@ import (
 func main() {
 	app := &cli.App{
 		Name:    "limestone",
-		Version: "0.4.0",
+		Version: "0.4.1",
 		Authors: []*cli.Author{
 			{
 				Name:  "Damian Bednarczyk",
