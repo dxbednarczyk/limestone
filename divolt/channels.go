@@ -72,7 +72,7 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 
 // just over the threshold
 //
-//nolint:funlen,cyclop
+//nolint:funlen
 func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -110,9 +110,7 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 			case "Message":
 				mentionsAuthUser := strings.Contains(message.Content, sesh.Config.Auth.UserID)
 
-				if message.Channel != uploadsChannelID ||
-					message.Author != botUserID ||
-					!mentionsAuthUser {
+				if isMessageInvalid(&message, uploadsChannelID, mentionsAuthUser) {
 					break
 				}
 
@@ -120,9 +118,7 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 			case "MessageUpdate":
 				containsRequestMessage := slices.Contains(message.Replies, sentID)
 
-				if message.Channel != requestChannelID ||
-					message.Author != botUserID ||
-					!containsRequestMessage {
+				if isMessageInvalid(&message, requestChannelID, containsRequestMessage){
 					break
 				}
 
@@ -171,4 +167,10 @@ func authenticateSocket(token string) (*recws.RecConn, error) {
 	}
 
 	return &socket, nil
+}
+
+func isMessageInvalid(message *Message, wantChannel string, condition bool) bool {
+	return message.Channel != wantChannel ||
+		message.Author != botUserID ||
+		!condition
 }

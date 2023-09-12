@@ -17,3 +17,7 @@ linters:
     - misspell
     - gocyclo
     - funlen
+
+linters-settings:
+  cyclop:
+    max-complexity: 15
