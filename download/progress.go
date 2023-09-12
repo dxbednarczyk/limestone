@@ -29,12 +29,12 @@ func (pw *progressWriter) Start(p *tea.Program) {
 	}
 }
 
-func (pw *progressWriter) Write(p []byte) (int, error) {
-	pw.downloaded += len(p)
+func (pw *progressWriter) Write(progress []byte) (int, error) {
+	pw.downloaded += len(progress)
 
 	if pw.total > 0 && pw.onProgress != nil {
 		pw.onProgress(float64(pw.downloaded) / float64(pw.total))
 	}
 
-	return len(p), nil
+	return len(progress), nil
 }

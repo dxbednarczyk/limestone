@@ -18,15 +18,15 @@ type Track struct {
 }
 
 func (t Track) Title() string {
-	var sb strings.Builder
+	var builder strings.Builder
 
 	if t.ParentalWarning {
-		sb.WriteString("[E] ")
+		builder.WriteString("[E] ")
 	}
 
-	sb.WriteString(t.Name)
+	builder.WriteString(t.Name)
 
-	return sb.String()
+	return builder.String()
 }
 
 func (t Track) Description() string { return fmt.Sprintf("%s | %s", t.Performer.Name, t.FormatTime()) }

@@ -29,6 +29,7 @@ func (config *Config) CacheLoginDetails() error {
 	}
 
 	filePath := configDir + "/limestone/config.json"
+
 	var dest *os.File
 
 	dest, err = os.Create(filePath)
@@ -65,6 +66,7 @@ func GetLoginDetails() (Config, error) {
 	}
 
 	path := dir + "/limestone/config.json"
+
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return Config{}, err

@@ -15,7 +15,7 @@ import (
 	"golang.org/x/term"
 )
 
-var allowedUrls []string = []string{
+var allowedUrls = []string{
 	"qobuz.com",
 	"deezer.com",
 	"tidal.com",
@@ -67,18 +67,10 @@ You can download individual tracks or full albums using Divolt.`,
 				},
 			)
 			if err != nil || 400 <= resp.StatusCode {
-				fmt.Println("token is invalid.")
-				fmt.Println("Creating new session...")
-
-				err := session.Login()
-				if err != nil {
-					return errors.New("failed to login")
-				}
-
-				session.Config.CacheLoginDetails()
-			} else {
-				fmt.Println("token is valid.")
+				return errors.New("token is invalid, must re-authenticate")
 			}
+
+			fmt.Println("token is valid.")
 		}
 
 		err = CheckServerStatus(&session)
@@ -177,11 +169,11 @@ var Logout = cli.Command{
 	},
 }
 
-func formatURL(u string) (string, error) {
+func formatURL(unformatted string) (string, error) {
 	var contains bool
 
 	for _, p := range allowedUrls {
-		if strings.Contains(u, p) {
+		if strings.Contains(unformatted, p) {
 			contains = true
 			break
 		}
@@ -192,7 +184,7 @@ func formatURL(u string) (string, error) {
 	}
 
 	// remove invalid query at end of some urls, especially deezer
-	parsed, err := url.Parse(u)
+	parsed, err := url.Parse(unformatted)
 	if err != nil {
 		return "", err
 	}

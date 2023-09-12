@@ -70,46 +70,30 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 	return message.ID, nil
 }
 
-func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
-	c, cancel := context.WithCancel(context.Background())
+// just over the threshold
+//
+//nolint:funlen,cyclop
+func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ws := recws.RecConn{
-		NonVerbose:       true,
-		KeepAliveTimeout: 10 * time.Second,
-	}
-
-	ws.Dial("wss://ws.divolt.xyz", http.Header{})
-
-	for start := time.Now(); ; {
-		if ws.IsConnected() {
-			break
-		}
-
-		if time.Since(start) > 10*time.Second {
-			return Message{}, errors.New("dialing websocket timed out")
-		}
-	}
-
-	authPayload := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, sesh.Config.Auth.Token)
-	err := ws.WriteMessage(textMessage, []byte(authPayload))
-
-	fmt.Print("Waiting for authentication... ")
-
+	socket, err := authenticateSocket(sesh.Config.Auth.Token)
 	if err != nil {
 		return Message{}, err
 	}
 
 	var message Message
+
 	var done bool
 
 	for !done {
 		select {
-		case <-c.Done():
+		case <-ctx.Done():
 			done = true
-			go ws.Close()
+
+			go socket.Close()
 		default:
-			_, msg, err := ws.ReadMessage()
+			_, msg, err := socket.ReadMessage()
 			if err != nil {
 				return Message{}, err
 			}
@@ -134,7 +118,7 @@ func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
 
 				cancel()
 			case "MessageUpdate":
-				containsRequestMessage := slices.Contains(message.Replies, sentId)
+				containsRequestMessage := slices.Contains(message.Replies, sentID)
 
 				if message.Channel != requestChannelID ||
 					message.Author != botUserID ||
@@ -155,5 +139,36 @@ func GetUploadMessage(sesh *Session, sentId string) (Message, error) {
 	}
 
 	fmt.Println("Response received.")
+
 	return message, nil
+}
+
+func authenticateSocket(token string) (*recws.RecConn, error) {
+	socket := recws.RecConn{
+		NonVerbose:       true,
+		KeepAliveTimeout: 10 * time.Second,
+	}
+
+	socket.Dial("wss://ws.divolt.xyz", http.Header{})
+
+	for start := time.Now(); ; {
+		if socket.IsConnected() {
+			break
+		}
+
+		if time.Since(start) > 10*time.Second {
+			return nil, errors.New("dialing websocket timed out")
+		}
+	}
+
+	authPayload := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, token)
+	err := socket.WriteMessage(textMessage, []byte(authPayload))
+
+	fmt.Print("Waiting for authentication... ")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &socket, nil
 }

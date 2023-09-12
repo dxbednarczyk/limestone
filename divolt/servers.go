@@ -31,16 +31,19 @@ func CheckServerStatus(sesh *Session) error {
 		return errors.New("authenticated response failed")
 	}
 
-	var us UserStatus
-	err = json.NewDecoder(resp.Body).Decode(&us)
+	var status UserStatus
+
+	err = json.NewDecoder(resp.Body).Decode(&status)
+
 	if err != nil {
 		return err
 	}
 
-	if us.JoinedAt == "" {
+	if status.JoinedAt == "" {
 		return errors.New("user not in slav art server")
 	}
-	if us.Timeout != "" {
+
+	if status.Timeout != "" {
 		return errors.New("user is in timeout")
 	}
 

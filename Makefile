@@ -21,4 +21,4 @@ lint:
 	go mod tidy
 	go clean
 	
-	golangci-lint run
+	golangci-lint run -c .golangci-lint.yaml

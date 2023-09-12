@@ -60,27 +60,27 @@ func WithProgressBar(resp *http.Response, path, absoluteFilename string) error {
 
 	defer dest.Close()
 
-	var p *tea.Program
+	var prog *tea.Program
 
-	pw := &progressWriter{
+	writer := &progressWriter{
 		total:       int(resp.ContentLength),
 		destination: dest,
 		reader:      resp.Body,
 		onProgress: func(ratio float64) {
-			p.Send(ratio)
+			prog.Send(ratio)
 		},
 	}
 
 	m := model{
-		writer:   pw,
+		writer:   writer,
 		progress: progress.New(progress.WithDefaultGradient()),
 	}
 
-	p = tea.NewProgram(m)
+	prog = tea.NewProgram(m)
 
-	go pw.Start(p)
+	go writer.Start(prog)
 
-	if _, err := p.Run(); err != nil {
+	if _, err := prog.Run(); err != nil {
 		return err
 	}
 

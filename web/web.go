@@ -77,30 +77,7 @@ func Query(ctx *cli.Context) (*Track, error) {
 	defer resp.Body.Close()
 
 	if ctx.Bool("closest") {
-		tracks := map[string]*Track{}
-
-		for i := range searchData.Tracks.Items {
-			track := &searchData.Tracks.Items[i]
-
-			desc := fmt.Sprintf("%s - %s", track.Performer.Name, track.Name)
-
-			tracks[desc] = track
-		}
-
-		keys := maps.Keys(tracks)
-
-		lowest := 0.0
-		var closestKey string
-
-		for _, key := range keys {
-			distance := smetrics.Jaro(key, query)
-
-			if distance > lowest {
-				closestKey = key
-			}
-		}
-
-		return tracks[closestKey], nil
+		return getClosestMatch(&searchData, query)
 	}
 
 	// this is extremely stupid.
@@ -119,4 +96,32 @@ func Query(ctx *cli.Context) (*Track, error) {
 	}
 
 	return &choice, nil
+}
+
+func getClosestMatch(searchData *searchResponse, query string) (*Track, error) {
+	tracks := map[string]*Track{}
+
+	for i := range searchData.Tracks.Items {
+		track := &searchData.Tracks.Items[i]
+
+		desc := fmt.Sprintf("%s - %s", track.Performer.Name, track.Name)
+
+		tracks[desc] = track
+	}
+
+	keys := maps.Keys(tracks)
+
+	var closestKey string
+
+	lowest := 0.0
+
+	for _, key := range keys {
+		distance := smetrics.Jaro(key, query)
+
+		if distance > lowest {
+			closestKey = key
+		}
+	}
+
+	return tracks[closestKey], nil
 }
