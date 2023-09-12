@@ -107,7 +107,7 @@ var Login = cli.Command{
 		}
 
 		fmt.Printf("Enter the password for %s: ", email)
-		passwordBytes, err := term.ReadPassword(syscall.Stdin)
+		passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			return err
 		}
