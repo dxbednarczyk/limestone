@@ -16,10 +16,10 @@ type Session struct {
 	Config *config.Config
 }
 
-type requestInfo struct {
-	method string
-	path   string
-	body   io.Reader
+type RequestInfo struct {
+	Method string
+	Path   string
+	Body   io.Reader
 }
 
 func NewSession(cfg *config.Config) Session {
@@ -64,9 +64,9 @@ func (sesh *Session) Login() error {
 
 func (sesh *Session) Logout() error {
 	resp, err := sesh.AuthenticatedRequest(
-		requestInfo{
-			method: http.MethodPost,
-			path:   "auth/session/logout",
+		RequestInfo{
+			Method: http.MethodPost,
+			Path:   "auth/session/logout",
 		},
 	)
 	if err != nil {
@@ -76,11 +76,11 @@ func (sesh *Session) Logout() error {
 	return resp.Body.Close()
 }
 
-func (sesh *Session) AuthenticatedRequest(info requestInfo) (*http.Response, error) {
+func (sesh *Session) AuthenticatedRequest(info RequestInfo) (*http.Response, error) {
 	req, err := http.NewRequest(
-		info.method,
-		fmt.Sprintf("https://api.divolt.xyz/%s", info.path),
-		info.body,
+		info.Method,
+		fmt.Sprintf("https://api.divolt.xyz/%s", info.Path),
+		info.Body,
 	)
 	if err != nil {
 		return nil, err

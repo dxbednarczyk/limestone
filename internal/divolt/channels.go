@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"slices"
 	"strings"
 	"time"
@@ -44,10 +43,10 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 	}
 
 	resp, err := sesh.AuthenticatedRequest(
-		requestInfo{
-			method: http.MethodPost,
-			path:   fmt.Sprintf("channels/%s/messages", requestChannelID),
-			body:   strings.NewReader(content),
+		RequestInfo{
+			Method: http.MethodPost,
+			Path:   fmt.Sprintf("channels/%s/messages", requestChannelID),
+			Body:   strings.NewReader(content),
 		},
 	)
 	if err != nil {
@@ -84,13 +83,9 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 
 	var message Message
 
-	var done bool
-
-	for !done {
+	for socket.IsConnected() {
 		select {
 		case <-ctx.Done():
-			done = true
-
 			go socket.Close()
 		default:
 			_, msg, err := socket.ReadMessage()
@@ -125,8 +120,8 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 				lowercaseMessage := strings.ToLower(message.Content)
 
 				if strings.Contains(lowercaseMessage, "error") {
-					fmt.Fprintln(os.Stderr, message.Content)
-					os.Exit(1)
+					cancel()
+					return Message{}, errors.New(lowercaseMessage)
 				}
 
 				fmt.Println(message.Content)
@@ -140,6 +135,8 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 }
 
 func authenticateSocket(token string) (*recws.RecConn, error) {
+	fmt.Print("Trying to authenticate... ")
+
 	socket := recws.RecConn{
 		NonVerbose:       true,
 		KeepAliveTimeout: 10 * time.Second,
@@ -158,10 +155,8 @@ func authenticateSocket(token string) (*recws.RecConn, error) {
 	}
 
 	authPayload := fmt.Sprintf(`{"type":"Authenticate","token":"%s"}`, token)
+
 	err := socket.WriteMessage(textMessage, []byte(authPayload))
-
-	fmt.Print("Waiting for authentication... ")
-
 	if err != nil {
 		return nil, err
 	}

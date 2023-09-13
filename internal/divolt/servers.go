@@ -16,9 +16,9 @@ const slavArtServerID = "01G96DF05GVMT53VKYH83RMZMN"
 
 func CheckServerStatus(sesh *Session) error {
 	resp, err := sesh.AuthenticatedRequest(
-		requestInfo{
-			method: http.MethodGet,
-			path:   fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.Config.Auth.UserID),
+		RequestInfo{
+			Method: http.MethodGet,
+			Path:   fmt.Sprintf("servers/%s/members/%s", slavArtServerID, sesh.Config.Auth.UserID),
 		},
 	)
 	if err != nil {

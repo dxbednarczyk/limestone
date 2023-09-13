@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/dxbednarczyk/limestone/internal/divolt"
-	"github.com/dxbednarczyk/limestone/internal/web"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 )
 
 func main() {
@@ -26,16 +24,16 @@ See the FAQ at https://rentry.org/slavart`,
 			&cli.PathFlag{Name: "dir", Usage: "directory to save downloaded music to"},
 		},
 		Commands: []*cli.Command{
-			&divolt.Login,
-			&divolt.Logout,
-			&divolt.Divolt,
-			&web.Web,
+			&login,
+			&logout,
+			&divoltdl,
+			&webdl,
 		},
 	}
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 }

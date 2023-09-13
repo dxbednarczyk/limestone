@@ -1,8 +1,9 @@
-package divolt
+package main
 
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/dxbednarczyk/limestone/internal/config"
+	"github.com/dxbednarczyk/limestone/internal/divolt"
 	"github.com/dxbednarczyk/limestone/internal/download"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
@@ -25,7 +27,7 @@ var allowedUrls = []string{
 	"music.apple.com",
 }
 
-var Divolt = cli.Command{
+var divoltdl = cli.Command{
 	Name: "divolt",
 	UsageText: `limestone divolt [... args] <url>
 
@@ -55,35 +57,35 @@ You can download individual tracks or full albums using Divolt.`,
 			return errors.New("invalid url provided")
 		}
 
-		session := NewSession(&cfg)
+		session := divolt.NewSession(&cfg)
 
 		if cfg.Auth.Token != "" {
-			fmt.Print("Trying existing session token... ")
+			slog.Info("Trying existing session token")
 
 			resp, err := session.AuthenticatedRequest(
-				requestInfo{
-					method: http.MethodGet,
-					path:   "/users/@me",
+				divolt.RequestInfo{
+					Method: http.MethodGet,
+					Path:   "/users/@me",
 				},
 			)
 			if err != nil || 400 <= resp.StatusCode {
 				return errors.New("token is invalid, must re-authenticate")
 			}
 
-			fmt.Println("token is valid.")
+			slog.Info("Token is valid")
 		}
 
-		err = CheckServerStatus(&session)
+		err = divolt.CheckServerStatus(&session)
 		if err != nil {
 			return err
 		}
 
-		id, err := SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
+		id, err := divolt.SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
 		if err != nil {
 			return err
 		}
 
-		message, err := GetUploadMessage(&session, id)
+		message, err := divolt.GetUploadMessage(&session, id)
 		if err != nil {
 			return errors.New("failed to get upload response")
 		}
@@ -97,7 +99,7 @@ You can download individual tracks or full albums using Divolt.`,
 	},
 }
 
-var Login = cli.Command{
+var login = cli.Command{
 	Name:      "login",
 	UsageText: "limestone login <email>",
 	Action: func(ctx *cli.Context) error {
@@ -112,14 +114,14 @@ var Login = cli.Command{
 			return err
 		}
 
-		fmt.Print("\nLogging in... ")
+		slog.Info("Logging in... ")
 
 		cfg := config.Config{
 			Email:    email,
 			Password: string(passwordBytes),
 		}
 
-		session := NewSession(&cfg)
+		session := divolt.NewSession(&cfg)
 		err = session.Login()
 		if err != nil {
 			fmt.Println()
@@ -139,7 +141,7 @@ var Login = cli.Command{
 	},
 }
 
-var Logout = cli.Command{
+var logout = cli.Command{
 	Name:      "logout",
 	UsageText: "limestone logout",
 	Action: func(ctx *cli.Context) error {
@@ -152,7 +154,7 @@ var Logout = cli.Command{
 
 		// naming seems counterintuitive, but we need
 		// to authenticate before we can de-authenticate
-		session := NewSession(&cfg)
+		session := divolt.NewSession(&cfg)
 		err = session.Logout()
 		if err != nil {
 			return err
