@@ -2,7 +2,7 @@ PREFIX := $(HOME)/.local
 
 build:
 	mkdir -p build
-	go build -o build/limestone ./cmd 
+	go build -o build/limestone ./cmd/limestone
 
 install: build/limestone
 	install -Dm755 build/limestone $(PREFIX)/bin/limestone
