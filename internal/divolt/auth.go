@@ -50,14 +50,10 @@ func (sesh *Session) Login() error {
 
 	defer resp.Body.Close()
 
-	var authentication config.Authentication
-
-	err = json.NewDecoder(resp.Body).Decode(&authentication)
+	err = json.NewDecoder(resp.Body).Decode(&sesh.Config.Auth)
 	if err != nil {
 		return err
 	}
-
-	sesh.Config.Auth = authentication
 
 	return nil
 }

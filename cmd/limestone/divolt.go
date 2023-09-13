@@ -80,7 +80,7 @@ You can download individual tracks or full albums using Divolt.`,
 			return err
 		}
 
-		_, err = divolt.SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
+		err = divolt.SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
 		if err != nil {
 			return err
 		}

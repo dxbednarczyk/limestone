@@ -23,7 +23,6 @@ type Message struct {
 	Embeds  []struct {
 		Description string `json:"description"`
 	} `json:"embeds"`
-	Replies []string `json:"replies"`
 }
 
 const (
@@ -33,7 +32,7 @@ const (
 	textMessage      = 1
 )
 
-func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error) {
+func SendDownloadMessage(sesh *Session, url string, quality uint) error {
 	var content string
 
 	if quality <= 4 {
@@ -50,28 +49,18 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 		},
 	)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		return "", errors.New("invalid authentication, is the channel locked?")
+		return errors.New("invalid authentication, is the channel locked?")
 	}
 
-	var message Message
-
-	err = json.NewDecoder(resp.Body).Decode(&message)
-	if err != nil {
-		return "", err
-	}
-
-	return message.ID, nil
+	return err
 }
 
-// just over the threshold
-//
-//nolint:funlen
 func GetUploadMessage(sesh *Session) (Message, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

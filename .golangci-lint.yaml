@@ -17,6 +17,7 @@ linters:
     - misspell
     - gocyclo
     - funlen
+    - bodyclose
 
 linters-settings:
   cyclop:

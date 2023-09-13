@@ -27,16 +27,16 @@ See the FAQ at https://rentry.org/slavart`,
 		},
 		Before: func(ctx *cli.Context) error {
 			var handler io.Writer
-	
+
 			if ctx.Bool("log") {
 				handler = os.Stderr
 			} else {
 				handler = io.Discard
 			}
-	
+
 			slog.SetDefault(slog.New(slog.NewTextHandler(handler, nil)))
 			slog.Info("Logging is enabled")
-	
+
 			return nil
 		},
 		Commands: []*cli.Command{
