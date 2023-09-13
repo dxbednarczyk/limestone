@@ -8,7 +8,7 @@ import (
 	"net/url"
 
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/dxbednarczyk/limestone/download"
+	"github.com/dxbednarczyk/limestone/internal/download"
 	"github.com/schollz/closestmatch"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/maps"

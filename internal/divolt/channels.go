@@ -118,7 +118,7 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 			case "MessageUpdate":
 				containsRequestMessage := slices.Contains(message.Replies, sentID)
 
-				if isMessageInvalid(&message, requestChannelID, containsRequestMessage){
+				if isMessageInvalid(&message, requestChannelID, containsRequestMessage) {
 					break
 				}
 

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/dxbednarczyk/limestone/config"
-	"github.com/dxbednarczyk/limestone/download"
+	"github.com/dxbednarczyk/limestone/internal/config"
+	"github.com/dxbednarczyk/limestone/internal/download"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
 )

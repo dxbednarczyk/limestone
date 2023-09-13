@@ -17,7 +17,7 @@ clean: build/
 lint:
 	gofumpt -l -w .
 	
-	go vet
+	go vet ./...
 	go mod tidy
 	go clean
 	

@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/dxbednarczyk/limestone/config"
+	"github.com/dxbednarczyk/limestone/internal/config"
 )
 
 type Session struct {

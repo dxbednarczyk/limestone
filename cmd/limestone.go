@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dxbednarczyk/limestone/divolt"
-	"github.com/dxbednarczyk/limestone/web"
+	"github.com/dxbednarczyk/limestone/internal/divolt"
+	"github.com/dxbednarczyk/limestone/internal/web"
 	"github.com/urfave/cli/v2"
 )
 
