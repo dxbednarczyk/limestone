@@ -80,12 +80,12 @@ You can download individual tracks or full albums using Divolt.`,
 			return err
 		}
 
-		id, err := divolt.SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
+		_, err = divolt.SendDownloadMessage(&session, formatted, ctx.Uint("quality"))
 		if err != nil {
 			return err
 		}
 
-		message, err := divolt.GetUploadMessage(&session, id)
+		message, err := divolt.GetUploadMessage(&session)
 		if err != nil {
 			return errors.New("failed to get upload response")
 		}
@@ -114,7 +114,7 @@ var login = cli.Command{
 			return err
 		}
 
-		slog.Info("Logging in... ")
+		slog.Info("Logging in")
 
 		cfg := config.Config{
 			Email:    email,
@@ -124,18 +124,17 @@ var login = cli.Command{
 		session := divolt.NewSession(&cfg)
 		err = session.Login()
 		if err != nil {
-			fmt.Println()
 			return err
 		}
 
-		fmt.Println("login successful.")
+		slog.Info("Login successful")
 
 		err = cfg.CacheLoginDetails()
 		if err != nil {
 			return err
 		}
 
-		fmt.Println("Login details cached.")
+		slog.Info("Login details cached")
 
 		return nil
 	},
@@ -145,7 +144,7 @@ var logout = cli.Command{
 	Name:      "logout",
 	UsageText: "limestone logout",
 	Action: func(ctx *cli.Context) error {
-		fmt.Print("Logging out... ")
+		slog.Info("Logging out")
 
 		cfg, err := config.GetLoginDetails()
 		if err != nil {
@@ -165,7 +164,7 @@ var logout = cli.Command{
 			return err
 		}
 
-		fmt.Println("logged out successfully.")
+		slog.Info("Logged out successfully")
 
 		return nil
 	},

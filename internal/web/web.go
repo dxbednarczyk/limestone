@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 
@@ -22,7 +23,7 @@ type searchResponse struct {
 func Query(ctx *cli.Context) (*Track, error) {
 	query := ctx.Args().First()
 
-	fmt.Printf("Getting results for query '%s'...\n", query)
+	slog.Info("Getting results for query " + query)
 
 	escaped := url.QueryEscape(query)
 

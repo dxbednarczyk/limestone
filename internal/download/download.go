@@ -2,6 +2,7 @@ package download
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -13,7 +14,7 @@ import (
 )
 
 func FromMessage(ctx *cli.Context, description string) error {
-	fmt.Println("Downloading...")
+	slog.Info("Downloading")
 
 	splitDesc := strings.Split(description, "\n")
 	url := strings.TrimSpace(splitDesc[len(splitDesc)-1])
@@ -32,7 +33,7 @@ func FromMessage(ctx *cli.Context, description string) error {
 }
 
 func FromWeb(ctx *cli.Context, trackID int, performerName, name string) error {
-	fmt.Printf("Downloading %s - %s...\n", performerName, name)
+	slog.Info(fmt.Sprintf("Downloading %s - %s...\n", performerName, name))
 
 	resp, err := http.Get(fmt.Sprintf("https://slavart-api.gamesdrive.net/api/download/track?id=%d", trackID))
 	if err != nil {
@@ -84,7 +85,7 @@ func WithProgressBar(resp *http.Response, path, absoluteFilename string) error {
 		return err
 	}
 
-	fmt.Println("Downloaded to ", absoluteFilename)
+	slog.Info("Downloaded to " + absoluteFilename)
 
 	return nil
 }

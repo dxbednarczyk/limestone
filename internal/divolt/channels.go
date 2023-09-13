@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
-	"slices"
 	"strings"
 	"time"
 
@@ -72,7 +72,7 @@ func SendDownloadMessage(sesh *Session, url string, quality uint) (string, error
 // just over the threshold
 //
 //nolint:funlen
-func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
+func GetUploadMessage(sesh *Session) (Message, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -100,8 +100,7 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 
 			switch message.Type {
 			case "Authenticated":
-				fmt.Println("Authenticated.")
-				fmt.Print("Waiting for a response... ")
+				slog.Info("Authenticated and awaiting a response")
 			case "Message":
 				mentionsAuthUser := strings.Contains(message.Content, sesh.Config.Auth.UserID)
 
@@ -110,32 +109,17 @@ func GetUploadMessage(sesh *Session, sentID string) (Message, error) {
 				}
 
 				cancel()
-			case "MessageUpdate":
-				containsRequestMessage := slices.Contains(message.Replies, sentID)
-
-				if isMessageInvalid(&message, requestChannelID, containsRequestMessage) {
-					break
-				}
-
-				lowercaseMessage := strings.ToLower(message.Content)
-
-				if strings.Contains(lowercaseMessage, "error") {
-					cancel()
-					return Message{}, errors.New(lowercaseMessage)
-				}
-
-				fmt.Println(message.Content)
 			}
 		}
 	}
 
-	fmt.Println("Response received.")
+	slog.Info("Response received")
 
 	return message, nil
 }
 
 func authenticateSocket(token string) (*recws.RecConn, error) {
-	fmt.Print("Trying to authenticate... ")
+	slog.Info("Authenticating")
 
 	socket := recws.RecConn{
 		NonVerbose:       true,

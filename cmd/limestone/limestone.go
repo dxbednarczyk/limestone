@@ -1,10 +1,10 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 func main() {
