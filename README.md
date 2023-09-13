@@ -1,5 +1,6 @@
 # Limestone
 [![Go Report Card](https://goreportcard.com/badge/github.com/dxbednarczyk/limestone)](https://goreportcard.com/report/github.com/dxbednarczyk/limestone)
+[![Maintainability](https://api.codeclimate.com/v1/badges/173a1d2d8003627a7261/maintainability)](https://codeclimate.com/github/dxbednarczyk/limestone/maintainability)
 
 CLI app for downloading music from Slav Art.
 
