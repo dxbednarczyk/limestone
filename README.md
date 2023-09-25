@@ -94,15 +94,4 @@ rm -f /home/damian/.local/bin/limestone
 ```
 
 ## Comparison
-|  | `limestone` | `slavartdl` | `slavolt-scraper` |
-|--|--|--|--|
-| STDIN input | ❌ | ✅ | ❌ |
-| CLI | ✅ | ✅  | ❌ |
-| TUI | ✅ | ❌ | ❌ |
-| Website Track API | ✅ | ❌ | ❌ |
-| Unzip downloaded tracks | ❌ | ✅ | ❌ |
-| Credential storage | ✅ | ✅ | ✅ |
-| Session token storage | ✅ | ✅ | ❌ |
-| Self-update | ❌ | ✅ | ❌ |
-
-`limestone` supports both Slav Art download methods, and [uses websockets](https://github.com/dxbednarczyk/limestone/blob/5197cefed4332c09a675c42511ba9a632f3c4891/divolt/channels.go#L76) instead of [large](https://github.com/D0otDo0t/slavolt-scraper/blob/d189ae68241144cd74e40cad13a3f84279361265/slavolt_scraper.py#L75) [REST](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L93) [payloads](https://github.com/tywil04/slavartdl/blob/35692f1883ad6bbe36fc54e8a738b55653a4d6db/internal/slavart/slavart.go#L113).
+See [similar tools.](https://github.com/tywil04/slavartdl?tab=readme-ov-file#similar-tools)
