@@ -18,21 +18,12 @@ type Authentication struct {
 }
 
 func (config *Config) CacheLoginDetails() error {
-	configDir, err := os.UserConfigDir()
+	path, err := getConfigPath()
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(configDir+"/limestone", os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	filePath := configDir + "/limestone/config.json"
-
-	var dest *os.File
-
-	dest, err = os.Create(filePath)
+	dest, err := os.Create(path+"config.json")
 	if err != nil {
 		return err
 	}
@@ -49,29 +40,21 @@ func (config *Config) CacheLoginDetails() error {
 		return err
 	}
 
-	err = dest.Sync()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return dest.Sync()
 }
 
 func GetLoginDetails() (Config, error) {
+	path, err := getConfigPath()
+	if err != nil {
+		return Config{}, err
+	}
+
+	content, err := os.ReadFile(path+"config.json")
+	if err != nil {
+		return Config{}, err
+	}
+
 	var config Config
-
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return Config{}, err
-	}
-
-	path := dir + "/limestone/config.json"
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return Config{}, err
-	}
-
 	err = json.Unmarshal(content, &config)
 	if err != nil {
 		return Config{}, err
@@ -85,12 +68,21 @@ func GetLoginDetails() (Config, error) {
 }
 
 func RemoveConfigDetails() error {
-	dir, err := os.UserConfigDir()
+	path, err := getConfigPath()
 	if err != nil {
 		return err
 	}
 
-	path := dir + "/limestone/config.json"
+	return os.Remove(path+"config.json")
+}
 
-	return os.Remove(path)
+func getConfigPath() (string, error) {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+
+	path := dir + "/limestone/"
+
+	return path, err
 }

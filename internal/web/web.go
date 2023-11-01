@@ -20,7 +20,7 @@ type searchResponse struct {
 	} `json:"tracks"`
 }
 
-func Query(ctx *cli.Context) (*Track, error) {
+func GetTrack(ctx *cli.Context) (*Track, error) {
 	query := ctx.Args().First()
 
 	slog.Info("Getting results for query " + query)
@@ -41,14 +41,18 @@ func Query(ctx *cli.Context) (*Track, error) {
 
 	defer resp.Body.Close()
 
-	if ctx.Bool("closest") {
-		return getClosestMatch(&searchData, query)
+	return filterTrack(searchData.Tracks.Items, query, ctx.Bool("closest"))
+}
+
+func filterTrack(responseItems []Track, query string, closest bool) (*Track, error) {
+	if closest {
+		return getClosestMatch(responseItems, query)
 	}
 
 	// this is extremely stupid.
-	items := make([]list.Item, len(searchData.Tracks.Items))
-	for i := range searchData.Tracks.Items {
-		items[i] = searchData.Tracks.Items[i]
+	items := make([]list.Item, len(responseItems))
+	for i := range responseItems {
+		items[i] = responseItems[i]
 	}
 
 	choice, err := trackModel(items)
@@ -63,11 +67,11 @@ func Query(ctx *cli.Context) (*Track, error) {
 	return &choice, nil
 }
 
-func getClosestMatch(searchData *searchResponse, query string) (*Track, error) {
+func getClosestMatch(responseItems []Track, query string) (*Track, error) {
 	tracks := map[string]*Track{}
 
-	for i := range searchData.Tracks.Items {
-		track := &searchData.Tracks.Items[i]
+	for i := range responseItems {
+		track := &responseItems[i]
 
 		desc := fmt.Sprintf("%s - %s", track.Performer.Name, track.Name)
 

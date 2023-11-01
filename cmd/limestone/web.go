@@ -25,7 +25,7 @@ You can only download individual tracks from Qobuz using the web download method
 			return errors.New("you must provide a query")
 		}
 
-		track, err := web.Query(ctx)
+		track, err := web.GetTrack(ctx)
 		if err != nil {
 			return err
 		}
