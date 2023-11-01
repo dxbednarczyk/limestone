@@ -40,7 +40,9 @@ func (config *Config) CacheLoginDetails() error {
 		return err
 	}
 
-	return dest.Sync()
+	err = dest.Sync()
+
+	return err
 }
 
 func GetLoginDetails() (Config, error) {

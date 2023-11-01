@@ -33,13 +33,7 @@ const (
 )
 
 func SendDownloadMessage(sesh *Session, url string, quality uint) error {
-	var content string
-
-	if quality <= 4 {
-		content = fmt.Sprintf(`{"content":"!dl %s %d"}`, url, quality)
-	} else {
-		content = fmt.Sprintf(`{"content":"!dl %s"}`, url)
-	}
+	content := fmt.Sprintf(`{"content":"!dl %s %d"}`, url, quality)
 
 	resp, err := sesh.AuthenticatedRequest(
 		RequestInfo{

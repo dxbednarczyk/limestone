@@ -44,18 +44,15 @@ func (sesh *Session) Login() error {
 		return errors.New("failed to send login request")
 	}
 
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("failed validation")
 	}
 
-	defer resp.Body.Close()
-
 	err = json.NewDecoder(resp.Body).Decode(&sesh.Config.Auth)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (sesh *Session) Logout() error {

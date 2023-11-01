@@ -32,9 +32,7 @@ func CheckServerStatus(sesh *Session) error {
 	}
 
 	var status UserStatus
-
 	err = json.NewDecoder(resp.Body).Decode(&status)
-
 	if err != nil {
 		return err
 	}
