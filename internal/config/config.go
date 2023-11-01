@@ -23,7 +23,7 @@ func (config *Config) CacheLoginDetails() error {
 		return err
 	}
 
-	dest, err := os.Create(path+"config.json")
+	dest, err := os.Create(path + "config.json")
 	if err != nil {
 		return err
 	}
@@ -51,12 +51,13 @@ func GetLoginDetails() (Config, error) {
 		return Config{}, err
 	}
 
-	content, err := os.ReadFile(path+"config.json")
+	content, err := os.ReadFile(path + "config.json")
 	if err != nil {
 		return Config{}, err
 	}
 
 	var config Config
+	
 	err = json.Unmarshal(content, &config)
 	if err != nil {
 		return Config{}, err
@@ -75,7 +76,7 @@ func RemoveConfigDetails() error {
 		return err
 	}
 
-	return os.Remove(path+"config.json")
+	return os.Remove(path + "config.json")
 }
 
 func getConfigPath() (string, error) {
