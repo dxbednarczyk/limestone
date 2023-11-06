@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/dxbednarczyk/limestone/internal/download"
 	"github.com/urfave/cli/v2"
 )
 
@@ -48,6 +49,12 @@ See the FAQ at https://rentry.org/slavart`,
 	}
 
 	err := app.Run(os.Args)
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+
+	err = download.FlushQueue()
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)

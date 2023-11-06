@@ -1,6 +1,7 @@
 package download
 
 import (
+	"container/list"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -13,11 +14,21 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func FromMessage(ctx *cli.Context, description string) error {
-	slog.Info("Downloading")
+var queue = list.New()
 
-	splitDesc := strings.Split(description, "\n")
-	url := strings.TrimSpace(splitDesc[len(splitDesc)-1])
+type Download struct {
+	resp 	*http.Response
+	dest 	*os.File
+}
+
+func FromMessage(ctx *cli.Context, message string) error {
+	slog.Info("Downloading from message")
+
+	splitMessage := strings.Split(message, "\n")
+
+	last := splitMessage[len(splitMessage) - 1]
+
+	url := strings.TrimSpace(last)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -28,12 +39,24 @@ func FromMessage(ctx *cli.Context, description string) error {
 
 	path := GetDownloadPath(ctx)
 	filename := fmt.Sprintf("%s/limestone-%s.zip", path, uniuri.New())
+	
+	dest, err := createOutputFile(path, filename)
+	if err != nil {
+		return err
+	}
 
-	return WithProgressBar(resp, path, filename)
+	defer dest.Close()
+
+	download := Download {
+		resp,
+		dest,
+	}
+
+	return addToQueue(download)
 }
 
-func FromWeb(ctx *cli.Context, trackID int, performerName, name string) error {
-	slog.Info(fmt.Sprintf("Downloading %s - %s...\n", performerName, name))
+func FromWeb(ctx *cli.Context, trackID int, performerName, trackName string) error {
+	slog.Info("Downloading from web")
 
 	resp, err := http.Get(fmt.Sprintf("https://slavart-api.gamesdrive.net/api/download/track?id=%d", trackID))
 	if err != nil {
@@ -43,30 +66,39 @@ func FromWeb(ctx *cli.Context, trackID int, performerName, name string) error {
 	defer resp.Body.Close()
 
 	path := GetDownloadPath(ctx)
-	filename := fmt.Sprintf("%s/%s - %s.flac", path, performerName, name)
+	filename := fmt.Sprintf("%s/%s - %s.flac", path, performerName, trackName)
 
-	return WithProgressBar(resp, path, filename)
-}
-
-func WithProgressBar(resp *http.Response, path, absoluteFilename string) error {
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	dest, err := os.Create(absoluteFilename)
+	dest, err := createOutputFile(path, filename)
 	if err != nil {
 		return err
 	}
 
 	defer dest.Close()
 
+	download := Download{
+		resp,
+		dest,
+	}
+
+	return addToQueue(download)
+}
+
+func createOutputFile(path, filename string) (*os.File, error) {
+	err := os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	return os.Create(filename)
+}
+
+func addToQueue(download Download) error {
 	var prog *tea.Program
 
 	writer := &progressWriter{
-		total:       int(resp.ContentLength),
-		destination: dest,
-		reader:      resp.Body,
+		total:       int(download.resp.ContentLength),
+		destination: download.dest,
+		reader:      download.resp.Body,
 		onProgress: func(ratio float64) {
 			prog.Send(ratio)
 		},
@@ -77,15 +109,25 @@ func WithProgressBar(resp *http.Response, path, absoluteFilename string) error {
 		progress: progress.New(progress.WithDefaultGradient()),
 	}
 
-	prog = tea.NewProgram(m)
+	queue.PushBack(m)
 
-	go writer.Start(prog)
+	return nil
+}
 
-	if _, err := prog.Run(); err != nil {
-		return err
+func FlushQueue() error {
+	for e := queue.Front(); e != nil; e = e.Next() {
+		model := e.Value.(model)
+
+		prog := tea.NewProgram(model)
+
+		go model.writer.Start(prog)
+
+		if _, err := prog.Run(); err != nil {
+			return err
+		}
+
+		slog.Info("Downloaded to " + model.writer.destination.Name())
 	}
-
-	slog.Info("Downloaded to " + absoluteFilename)
 
 	return nil
 }
